@@ -14,6 +14,11 @@ defmodule Verzzatile do
     def new_with_id(id, value) do
       %Cell{id: id, value: value}
     end
+
+    def get_id(%{id: id}), do: id
+
+    def get_id(id), do: id
+
   end
 
   @doc """
@@ -25,11 +30,7 @@ defmodule Verzzatile do
   end
 
   def get(cell_or_id) do
-    id = if is_map(cell_or_id) do
-           cell_or_id.id
-         else
-           cell_or_id
-         end
+    id = Cell.get_id(cell_or_id)
     {:ok, cell_or_id}
   end
 
