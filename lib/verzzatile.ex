@@ -51,6 +51,14 @@ defmodule Verzzatile do
     end
   end
 
+  def connect(cell1, cell2, dimension) do
+    GenServer.cast(__MODULE__, {:connect, cell1, cell2, dimension})
+  end
+
+  def next(cell, dimension) do
+    GenServer.call(__MODULE__, {:next, cell, dimension})
+  end
+
   # Server Callbacks
 
   @impl true
