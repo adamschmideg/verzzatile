@@ -30,7 +30,7 @@ defmodule Verzzatile do
          else
            cell_or_id
          end
-    cell_or_id
+    {:ok, cell_or_id}
   end
 
 end
