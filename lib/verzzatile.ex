@@ -3,23 +3,6 @@ defmodule Verzzatile do
   Documentation for `Verzzatile`.
   """
 
-  defmodule Cell do
-    defstruct id: nil, value: nil
-
-    def new(value) do
-      id = "#{:rand.uniform 1000_000_000}"
-      new_with_id(id, value)
-    end
-
-    def new_with_id(id, value) do
-      %Cell{id: id, value: value}
-    end
-
-    def get_id(%{id: id}), do: id
-    def get_id(id), do: id
-
-  end
-
   defmodule ZZstructure do
     defstruct id_to_cell: %{}
   end
@@ -36,14 +19,13 @@ defmodule Verzzatile do
   Wraps the value in a cell, stores it, and returns the cell.
   """
   def add(value) do
-    cell = Cell.new(value)
-    GenServer.cast(__MODULE__, {:add, cell})
-    cell
+    cell_id = "#{:rand.uniform 1000_000_000}"
+    GenServer.cast(__MODULE__, {:add, cell_id, value})
+    cell_id
   end
 
-  def get(cell_or_id) do
-    id = Cell.get_id(cell_or_id)
-    cell = GenServer.call(__MODULE__, {:get, id})
+  def get(cell_id) do
+    cell = GenServer.call(__MODULE__, {:get, cell_id})
     if cell == nil do
       {:error, :not_found}
     else
@@ -67,15 +49,21 @@ defmodule Verzzatile do
   end
 
   @impl true
-  def handle_cast({:add, cell}, state) do
-    updated_state = Map.put(state, cell.id, cell)
+  def handle_cast({:add, cell_id, value}, state) do
+    updated_state = Map.put(state, cell_id, %{self: %{value: value, id: cell_id}})
+    {:noreply, updated_state}
+  end
+
+  @impl true
+  def handle_cast({:connect, cell1, cell2, dimension}, state) do
+    updated_state = Map.put(state, cell1.id, cell1)
+    updated_state = Map.put(updated_state, cell2.id, cell2)
     {:noreply, updated_state}
   end
 
   @impl true
   def handle_call({:get, cell_id}, _from, state) do
-    cell = Map.get(state, cell_id, nil)
-    {:reply, cell, state}
+    {:reply, get_in(state, [cell_id, :self]), state}
   end
 
 end
