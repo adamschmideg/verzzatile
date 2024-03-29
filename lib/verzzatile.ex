@@ -57,7 +57,6 @@ defmodule Verzzatile do
 
   @impl true
   def handle_cast({:connect, cell1_id, cell2_id, dimension}, state) do
-    IO.inspect({:connect, cell1_id, cell2_id, dimension, state})
     cond do
       (value = get_in(state, [cell1_id, :next, dimension])) != nil ->
         {:error, {:cell1_next_not_nil, value}}
