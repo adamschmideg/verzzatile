@@ -50,20 +50,37 @@ defmodule Verzzatile do
 
   @impl true
   def handle_cast({:add, cell_id, value}, state) do
-    updated_state = Map.put(state, cell_id, %{self: %{value: value, id: cell_id}})
+    cell = %{self: %{value: value, id: cell_id}, next: %{}, prev: %{}}
+    updated_state = Map.put(state, cell_id, cell)
     {:noreply, updated_state}
   end
 
   @impl true
-  def handle_cast({:connect, cell1, cell2, dimension}, state) do
-    updated_state = Map.put(state, cell1.id, cell1)
-    updated_state = Map.put(updated_state, cell2.id, cell2)
-    {:noreply, updated_state}
+  def handle_cast({:connect, cell1_id, cell2_id, dimension}, state) do
+    IO.inspect({:connect, cell1_id, cell2_id, dimension, state})
+    cond do
+      (value = get_in(state, [cell1_id, :next, dimension])) != nil ->
+        {:error, {:cell1_next_not_nil, value}}
+
+      (value = get_in(state, [cell2_id, :prev, dimension])) != nil ->
+        {:error, {:cell2_prev_not_nil, value}}
+
+      true ->
+        updated_state = state
+          |> update_in([cell1_id, :next, dimension], fn _ -> cell2_id end)
+          |> update_in([cell2_id, :prev, dimension], fn _ -> cell1_id end)
+        {:noreply, updated_state}
+    end
   end
 
   @impl true
   def handle_call({:get, cell_id}, _from, state) do
     {:reply, get_in(state, [cell_id, :self]), state}
+  end
+
+  @impl true
+  def handle_call({:next, cell_id, dimension}, _from, state) do
+    {:reply, get_in(state, [cell_id, :next, dimension]), state}
   end
 
 end
