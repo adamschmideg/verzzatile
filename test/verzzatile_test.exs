@@ -17,5 +17,7 @@ defmodule VerzzatileTest do
     assert :ok = Verzzatile.connect(cell1, cell2, :friend)
     assert cell2 = Verzzatile.next(cell1, :friend)
     assert is_nil Verzzatile.next(cell2, :friend)
+    assert cell1 = Verzzatile.prev(cell2, :friend)
+    assert is_nil Verzzatile.prev(cell1, :friend)
   end
 end

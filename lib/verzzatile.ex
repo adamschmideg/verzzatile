@@ -41,6 +41,10 @@ defmodule Verzzatile do
     GenServer.call(__MODULE__, {:next, cell, dimension})
   end
 
+  def prev(cell, dimension) do
+    GenServer.call(__MODULE__, {:prev, cell, dimension})
+  end
+
   # Server Callbacks
 
   @impl true
@@ -80,6 +84,11 @@ defmodule Verzzatile do
   @impl true
   def handle_call({:next, cell_id, dimension}, _from, state) do
     {:reply, get_in(state, [cell_id, :next, dimension]), state}
+  end
+
+  @impl true
+  def handle_call({:prev, cell_id, dimension}, _from, state) do
+    {:reply, get_in(state, [cell_id, :prev, dimension]), state}
   end
 
 end
