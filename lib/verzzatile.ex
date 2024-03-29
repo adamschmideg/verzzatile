@@ -24,6 +24,17 @@ defmodule Verzzatile do
     cell_id
   end
 
+  def add_many(values, dimension) do
+    Enum.reduce(values, nil, fn value, prev_cell_id ->
+      cell_id = add(value)
+      case prev_cell_id do
+        nil -> cell_id
+        _ -> connect(prev_cell_id, cell_id, dimension)
+      end
+      cell_id
+    end)
+  end
+
   def get(cell_id) do
     cell = GenServer.call(__MODULE__, {:get, cell_id})
     if cell == nil do
