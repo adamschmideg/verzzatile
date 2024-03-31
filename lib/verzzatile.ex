@@ -19,20 +19,17 @@ defmodule Verzzatile do
   Wraps the value in a cell, stores it, and returns the cell.
   """
   def add(value) do
-    cell_id = "#{:rand.uniform 1000_000_000}"
-    GenServer.cast(__MODULE__, {:add, cell_id, value})
-    cell_id
+    cell = %{id: :rand.uniform(1000_000_000), value: value}
+    GenServer.cast(__MODULE__, {:add, cell, value})
+    cell
   end
 
   def add_many(values, dimension) do
-    Enum.reduce(values, nil, fn value, prev_cell_id ->
-      cell_id = add(value)
-      case prev_cell_id do
-        nil -> cell_id
-        _ -> connect(prev_cell_id, cell_id, dimension)
-      end
-      cell_id
-    end)
+    cells = Enum.map(values, fn value -> add(value) end)
+    cells
+      |> Enum.zip(Enum.drop(cells, 1))
+      |> Enum.map(fn {cell1, cell2} -> connect(cell1, cell2, dimension) end)
+    cells
   end
 
   def get(cell_id) do
@@ -56,6 +53,31 @@ defmodule Verzzatile do
     GenServer.call(__MODULE__, {:prev, cell, dimension})
   end
 
+
+  def head_cell(cell_id, dimension) do
+    Enum.reduce_while([cell_id], nil, fn cell_id, acc ->
+      prev_cell_id = prev(cell_id, dimension)
+      case prev_cell_id do
+        nil -> {:halt, cell_id}
+        _ -> {:cont, prev_cell_id}
+      end
+    end)
+  end
+
+  @doc """
+  Returns the cells connected to the given cell in the given dimension.
+  """
+  def full_path(cell_id, dimension) do
+    head = head_cell(cell_id, dimension)
+    Enum.reduce_while([head], [], fn cell_id, acc ->
+      next_cell_id = next(cell_id, dimension)
+      case next_cell_id do
+        nil -> {:halt, acc}
+        _ -> {:cont, [next_cell_id | acc]}
+      end
+    end)
+  end
+
   # Server Callbacks
 
   @impl true
@@ -64,9 +86,9 @@ defmodule Verzzatile do
   end
 
   @impl true
-  def handle_cast({:add, cell_id, value}, state) do
-    cell = %{self: %{value: value, id: cell_id}, next: %{}, prev: %{}}
-    updated_state = Map.put(state, cell_id, cell)
+  def handle_cast({:add, cell, value}, state) do
+    full_cell = %{self: cell, next: %{}, prev: %{}}
+    updated_state = Map.put(state, cell[:id], full_cell)
     {:noreply, updated_state}
   end
 

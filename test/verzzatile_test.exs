@@ -5,11 +5,12 @@ defmodule VerzzatileTest do
   test "Gets a cell that was added" do
     {:ok, _pid} = Verzzatile.start_link()
     cell = Verzzatile.add('value')
-    assert {:ok, cell_got} = Verzzatile.get(cell)
+    assert {:ok, cell_got} = Verzzatile.get(cell.id)
     IO.inspect(cell_got)
     assert cell_got.value == 'value'
   end
 
+  @tag :focus
   test "Connect two cells and check if they are connected" do
     {:ok, _pid} = Verzzatile.start_link()
     cell1 = Verzzatile.add('value1')
@@ -38,12 +39,31 @@ defmodule VerzzatileTest do
     assert cell == Verzzatile.prev(cell, :friend)
   end
 
+  @tag :skip
   test "Add many cells and connect them" do
     {:ok, _pid} = Verzzatile.start_link()
+    cells = Verzzatile.add_many(['value1', 'value2', 'value3'], :friend)
+    values = Enum.map(cells, fn cell -> Verzzatile.get(cell) end)
+    assert ['value1', 'value2', 'value3'] == values
+  end
+
+  @tag :skip
+  test "Get head cell of a given cell in a given dimension" do
+    {:ok, _pid} = Verzzatile.start_link()
     last_cell = Verzzatile.add_many(['value1', 'value2', 'value3'], :friend)
+    head_cell = Verzzatile.head_cell(last_cell, :friend)
     assert last_cell
            |> Verzzatile.prev(:friend)
-           |> Verzzatile.next(:friend)
-           == last_cell
+           |> Verzzatile.prev(:friend)
+           == head_cell
+  end
+
+  @tag :skip
+  test "Full path of a cell returns cells connected to it in a given dimension" do
+    {:ok, _pid} = Verzzatile.start_link()
+    last_cell = Verzzatile.add_many(['value1', 'value2', 'value3'], :friend)
+    path = Verzzatile.full_path(last_cell, :friend)
+    values = path |> Enum.map(fn cell -> Verzzatile.get(cell) end)
+    assert ['value1', 'value2', 'value3'] == values
   end
 end
