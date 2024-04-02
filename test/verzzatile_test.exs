@@ -6,20 +6,18 @@ defmodule VerzzatileTest do
     {:ok, _pid} = Verzzatile.start_link()
     cell = Verzzatile.add('value')
     assert {:ok, cell_got} = Verzzatile.get(cell.id)
-    IO.inspect(cell_got)
     assert cell_got.value == 'value'
   end
 
-  @tag :focus
   test "Connect two cells and check if they are connected" do
     {:ok, _pid} = Verzzatile.start_link()
     cell1 = Verzzatile.add('value1')
     cell2 = Verzzatile.add('value2')
     assert :ok = Verzzatile.connect(cell1, cell2, :friend)
-    assert cell2 == Verzzatile.next(cell1, :friend)
-    assert is_nil Verzzatile.next(cell2, :friend)
-    assert cell1 == Verzzatile.prev(cell2, :friend)
-    assert is_nil Verzzatile.prev(cell1, :friend)
+    assert cell2.id == Verzzatile.next_id(cell1, :friend)
+    assert is_nil Verzzatile.next_id(cell2, :friend)
+    assert cell1.id == Verzzatile.prev_id(cell2, :friend)
+    assert is_nil Verzzatile.prev_id(cell1, :friend)
   end
 
   test "Connected cells are not connected in other dimensions" do

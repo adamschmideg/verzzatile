@@ -15,6 +15,13 @@ defmodule Verzzatile do
     GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
   end
 
+  defp get_id(cell_or_id) do
+    case cell_or_id do
+      %{} -> cell_or_id[:id]
+      _ -> cell_or_id
+    end
+  end
+
   @doc """
   Wraps the value in a cell, stores it, and returns the cell.
   """
@@ -32,31 +39,31 @@ defmodule Verzzatile do
     cells
   end
 
-  def get(cell_id) do
-    cell = GenServer.call(__MODULE__, {:get, cell_id})
-    if cell == nil do
-      {:error, :not_found}
-    else
-      {:ok, cell}
+  def get(cell_or_id) do
+    cell = GenServer.call(__MODULE__, {:get, get_id(cell_or_id)})
+    case cell do
+      nil -> {:error, :not_found}
+      _ -> {:ok, cell}
     end
   end
 
-  def connect(cell1, cell2, dimension) do
-    GenServer.cast(__MODULE__, {:connect, cell1, cell2, dimension})
+  def connect(cell_or_id1, cell_or_id2, dimension) do
+    GenServer.cast(__MODULE__, {:connect, get_id(cell_or_id1), get_id(cell_or_id2), dimension})
   end
 
-  def next(cell, dimension) do
-    GenServer.call(__MODULE__, {:next, cell, dimension})
+  def next_id(cell_or_id, dimension) do
+    GenServer.call(__MODULE__, {:next, get_id(cell_or_id), dimension})
   end
 
-  def prev(cell, dimension) do
-    GenServer.call(__MODULE__, {:prev, cell, dimension})
+  def prev_id(cell_or_id, dimension) do
+    GenServer.call(__MODULE__, {:prev, get_id(cell_or_id), dimension})
   end
 
 
-  def head_cell(cell_id, dimension) do
+  def head_cell(cell_or_id, dimension) do
+    cell_id = get_id(cell_or_id)
     Enum.reduce_while([cell_id], nil, fn cell_id, acc ->
-      prev_cell_id = prev(cell_id, dimension)
+      prev_cell_id = prev_id(cell_id, dimension)
       case prev_cell_id do
         nil -> {:halt, cell_id}
         _ -> {:cont, prev_cell_id}
@@ -67,10 +74,11 @@ defmodule Verzzatile do
   @doc """
   Returns the cells connected to the given cell in the given dimension.
   """
-  def full_path(cell_id, dimension) do
+  def full_path(cell_or_id, dimension) do
+    cell_id = get_id(cell_or_id)
     head = head_cell(cell_id, dimension)
     Enum.reduce_while([head], [], fn cell_id, acc ->
-      next_cell_id = next(cell_id, dimension)
+      next_cell_id = next_id(cell_id, dimension)
       case next_cell_id do
         nil -> {:halt, acc}
         _ -> {:cont, [next_cell_id | acc]}
