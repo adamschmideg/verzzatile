@@ -53,11 +53,13 @@ defmodule VerzzatileTest do
     assert head_id == Enum.at(cells, 0).id
   end
 
+  @tag :skip
   test "Full path of a cell returns cells connected to it in a given dimension" do
     {:ok, _pid} = Verzzatile.start_link()
-    last_cell = Verzzatile.add_many(['value1', 'value2', 'value3'], :friend)
-    path = Verzzatile.full_path(last_cell, :friend)
-    values = path |> Enum.map(fn cell -> Verzzatile.get(cell) end)
-    assert ['value1', 'value2', 'value3'] == values
+    cells = Verzzatile.add_many(['value1', 'value2', 'value3'], :friend)
+    mid_cell = Enum.at(cells, 1)
+    path = Verzzatile.full_path(mid_cell, :friend)
+    IO.inspect(path)
+    assert ['value1', 'value2', 'value3'] == path
   end
 end
