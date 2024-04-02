@@ -33,15 +33,15 @@ defmodule VerzzatileTest do
     {:ok, _pid} = Verzzatile.start_link()
     cell = Verzzatile.add('value')
     assert :ok = Verzzatile.connect(cell, cell, :friend)
-    assert cell == Verzzatile.next_id(cell, :friend)
-    assert cell == Verzzatile.prev_id(cell, :friend)
+    assert cell.id == Verzzatile.next_id(cell, :friend)
+    assert cell.id == Verzzatile.prev_id(cell, :friend)
   end
 
-  @tag :skip
   test "Add many cells and connect them" do
     {:ok, _pid} = Verzzatile.start_link()
     cells = Verzzatile.add_many(['value1', 'value2', 'value3'], :friend)
-    values = Enum.map(cells, fn cell -> Verzzatile.get(cell) end)
+    get_value = fn {:ok, %{value: value}} -> value end
+    values = Enum.map(cells, fn cell -> cell |> Verzzatile.get |> get_value.() end)
     assert ['value1', 'value2', 'value3'] == values
   end
 
@@ -53,7 +53,6 @@ defmodule VerzzatileTest do
     assert head_id == Enum.at(cells, 0).id
   end
 
-  @tag :skip
   test "Full path of a cell returns cells connected to it in a given dimension" do
     {:ok, _pid} = Verzzatile.start_link()
     last_cell = Verzzatile.add_many(['value1', 'value2', 'value3'], :friend)
