@@ -60,7 +60,7 @@ defmodule Verzzatile do
   end
 
 
-  def head_cell(cell_or_id, dimension) do
+  def head_id(cell_or_id, dimension) do
     cell_id = get_id(cell_or_id)
     Enum.reduce_while([cell_id], nil, fn cell_id, acc ->
       prev_cell_id = prev_id(cell_id, dimension)
@@ -76,7 +76,7 @@ defmodule Verzzatile do
   """
   def full_path(cell_or_id, dimension) do
     cell_id = get_id(cell_or_id)
-    head = head_cell(cell_id, dimension)
+    head = head_id(cell_id, dimension)
     Enum.reduce_while([head], [], fn cell_id, acc ->
       next_cell_id = next_id(cell_id, dimension)
       case next_cell_id do
