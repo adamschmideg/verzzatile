@@ -51,11 +51,11 @@ defmodule Verzzatile do
     GenServer.cast(__MODULE__, {:connect, get_id(cell_or_id1), get_id(cell_or_id2), dimension})
   end
 
-  def next_id(cell_or_id, dimension) do
+  def next(cell_or_id, dimension) do
     GenServer.call(__MODULE__, {:next, get_id(cell_or_id), dimension})
   end
 
-  def prev_id(cell_or_id, dimension) do
+  def prev(cell_or_id, dimension) do
     GenServer.call(__MODULE__, {:prev, get_id(cell_or_id), dimension})
   end
 
@@ -63,10 +63,10 @@ defmodule Verzzatile do
   def head_id(cell_or_id, dimension) do
     cell_id = get_id(cell_or_id)
     Enum.reduce_while([cell_id], nil, fn cell_id, acc ->
-      prev_cell_id = prev_id(cell_id, dimension)
-      case prev_cell_id do
+      prev_cell = prev(cell_id, dimension)
+      case prev_cell do
         nil -> {:halt, cell_id}
-        _ -> {:cont, prev_cell_id}
+        _ -> {:cont, prev_cell.id}
       end
     end)
   end
@@ -78,10 +78,10 @@ defmodule Verzzatile do
     cell_id = get_id(cell_or_id)
     head = head_id(cell_id, dimension)
     Enum.reduce_while([head], [], fn cell_id, acc ->
-      next_cell_id = next_id(cell_id, dimension)
-      case next_cell_id do
+      next_cell = next(cell_id, dimension)
+      case next_cell do
         nil -> {:halt, acc}
-        _ -> {:cont, [next_cell_id | acc]}
+        _ -> {:cont, [next_cell.id | acc]}
       end
     end)
   end
@@ -124,12 +124,16 @@ defmodule Verzzatile do
 
   @impl true
   def handle_call({:next, cell_id, dimension}, _from, state) do
-    {:reply, get_in(state, [cell_id, :next, dimension]), state}
+    id = get_in(state, [cell_id, :next, dimension])
+    cell = get_in(state, [id, :self])
+    {:reply, cell, state}
   end
 
   @impl true
   def handle_call({:prev, cell_id, dimension}, _from, state) do
-    {:reply, get_in(state, [cell_id, :prev, dimension]), state}
+    id = get_in(state, [cell_id, :prev, dimension])
+    cell = get_in(state, [id, :self])
+    {:reply, cell, state}
   end
 
 end
