@@ -39,9 +39,7 @@ defmodule VerzzatileTest do
   test "Add many cells and connect them" do
     {:ok, _pid} = Verzzatile.start_link()
     cells = Verzzatile.add_many(['value1', 'value2', 'value3'], :friend)
-    get_value = fn %{value: value} -> value end
-    values = Enum.map(cells, fn cell -> cell |> Verzzatile.get |> get_value.() end)
-    assert ['value1', 'value2', 'value3'] == values
+    assert ['value1', 'value2', 'value3'] == Enum.map(cells, fn cell -> cell.value end)
   end
 
   test "Get head cell of a given cell in a given dimension" do
