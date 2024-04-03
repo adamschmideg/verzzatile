@@ -40,11 +40,7 @@ defmodule Verzzatile do
   end
 
   def get(cell_or_id) do
-    cell = GenServer.call(__MODULE__, {:get, get_id(cell_or_id)})
-    case cell do
-      nil -> {:error, :not_found}
-      _ -> {:ok, cell}
-    end
+    GenServer.call(__MODULE__, {:get, get_id(cell_or_id)})
   end
 
   def connect(cell_or_id1, cell_or_id2, dimension) do
@@ -60,13 +56,14 @@ defmodule Verzzatile do
   end
 
 
-  def head_id(cell_or_id, dimension) do
+  def head(cell_or_id, dimension) do
     cell_id = get_id(cell_or_id)
-    Enum.reduce_while([cell_id], nil, fn cell_id, acc ->
-      prev_cell = prev(cell_id, dimension)
+    cell = get(cell_id)
+    Enum.reduce_while([cell], nil, fn cell, acc ->
+      prev_cell = prev(cell, dimension)
       case prev_cell do
-        nil -> {:halt, cell_id}
-        _ -> {:cont, prev_cell.id}
+        nil -> {:halt, cell}
+        _ -> {:cont, prev_cell}
       end
     end)
   end
@@ -76,8 +73,8 @@ defmodule Verzzatile do
   """
   def full_path(cell_or_id, dimension) do
     cell_id = get_id(cell_or_id)
-    head = head_id(cell_id, dimension)
-    Enum.reduce_while([head], [], fn cell_id, acc ->
+    head = head(cell_id, dimension)
+    Enum.reduce_while([head], [head], fn cell_id, acc ->
       next_cell = next(cell_id, dimension)
       case next_cell do
         nil -> {:halt, acc}
