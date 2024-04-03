@@ -56,6 +56,6 @@ defmodule VerzzatileTest do
     mid_cell = Enum.at(cells, 1)
     path = Verzzatile.full_path(mid_cell, :friend)
     IO.inspect(path)
-    assert ['value1', 'value2', 'value3'] == path
+    assert cells == path
   end
 end

@@ -72,15 +72,16 @@ defmodule Verzzatile do
   Returns the cells connected to the given cell in the given dimension.
   """
   def full_path(cell_or_id, dimension) do
-    cell_id = get_id(cell_or_id)
-    head = head(cell_id, dimension)
-    Enum.reduce_while([head], [head], fn cell_id, acc ->
-      next_cell = next(cell_id, dimension)
-      case next_cell do
-        nil -> {:halt, acc}
-        _ -> {:cont, [next_cell.id | acc]}
-      end
-    end)
+    head = head(cell_or_id, dimension)
+    full_path_from_head(head, dimension)
+  end
+
+  defp full_path_from_head(head, dimension) do
+    next = next(head, dimension)
+    case next do
+      nil -> [head]
+      _ -> [head | full_path_from_head(next, dimension)]
+    end
   end
 
   # Server Callbacks
