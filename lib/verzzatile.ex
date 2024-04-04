@@ -27,7 +27,7 @@ defmodule Verzzatile do
   """
   def add(value) do
     cell = %{id: :rand.uniform(1000_000_000), value: value}
-    GenServer.cast(__MODULE__, {:add, cell, value})
+    GenServer.cast(__MODULE__, {:add, cell})
     cell
   end
 
@@ -59,7 +59,7 @@ defmodule Verzzatile do
   def head(cell_or_id, dimension) do
     cell_id = get_id(cell_or_id)
     cell = get(cell_id)
-    Enum.reduce_while([cell], nil, fn cell, acc ->
+    Enum.reduce_while([cell], nil, fn cell, _acc ->
       prev_cell = prev(cell, dimension)
       case prev_cell do
         nil -> {:halt, cell}
@@ -92,7 +92,7 @@ defmodule Verzzatile do
   end
 
   @impl true
-  def handle_cast({:add, cell, value}, state) do
+  def handle_cast({:add, cell}, state) do
     full_cell = %{self: cell, next: %{}, prev: %{}}
     updated_state = Map.put(state, cell[:id], full_cell)
     {:noreply, updated_state}
