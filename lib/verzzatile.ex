@@ -35,7 +35,7 @@ defmodule Verzzatile do
     cells = Enum.map(values, fn value -> add(value) end)
     cells
       |> Enum.zip(Enum.drop(cells, 1))
-      |> Enum.map(fn {cell1, cell2} -> connect(cell1, cell2, dimension) end)
+      |> Enum.map(fn {cell1, cell2} -> connect(cell1, cell2, dimension, wait?: false) end)
     cells
   end
 
@@ -43,12 +43,14 @@ defmodule Verzzatile do
     GenServer.call(__MODULE__, {:get, get_id(cell_or_id)})
   end
 
-  def connect(cell_or_id1, cell_or_id2, dimension) do
+  def connect(cell_or_id1, cell_or_id2, dimension, wait? \\ true) do
     GenServer.cast(__MODULE__, {:connect, self(), get_id(cell_or_id1), get_id(cell_or_id2), dimension})
-    receive do
-      {:async_reply, response} -> response
-    after
-      5000 -> IO.puts("Timeout waiting for async task to complete")
+    if wait? do
+      receive do
+        {:async_reply, response} -> response
+      after
+        5000 -> IO.puts("Timeout waiting for async task to complete")
+      end
     end
   end
 
