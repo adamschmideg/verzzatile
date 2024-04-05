@@ -106,23 +106,17 @@ defmodule Verzzatile do
 
   @impl true
   def handle_cast({:connect, caller_pid, cell1_id, cell2_id, dimension}, state) do
-    cond do
-      (connected_id = get_in(state, [cell1_id, :next, dimension])) != nil ->
-        connected_cell = get_in(state, [connected_id, :self])
-        send(caller_pid, {:async_reply, {:error, {:already_connected, connected_cell}}})
-        {:noreply, state}
-
-      (connected_id = get_in(state, [cell2_id, :prev, dimension])) != nil ->
-        connected_cell = get_in(state, [connected_id, :self])
-        send(caller_pid, {:async_reply, {:error, {:already_connected, connected_cell}}})
-        {:noreply, state}
-
-      true ->
-        updated_state = state
-          |> update_in([cell1_id, :next, dimension], fn _ -> cell2_id end)
-          |> update_in([cell2_id, :prev, dimension], fn _ -> cell1_id end)
-        send(caller_pid, {:async_reply, :ok})
-        {:noreply, updated_state}
+    next_cell = get_in(state, [cell1_id, :next, dimension])
+    prev_cell = get_in(state, [cell2_id, :prev, dimension])
+    if next_cell != nil or prev_cell != nil do
+      send(caller_pid, {:async_reply, {:error, {:already_connected, next_cell || prev_cell}}})
+      {:noreply, state}
+    else
+      updated_state = state
+        |> update_in([cell1_id, :next, dimension], fn _ -> cell2_id end)
+        |> update_in([cell2_id, :prev, dimension], fn _ -> cell1_id end)
+      send(caller_pid, {:async_reply, :ok})
+      {:noreply, updated_state}
     end
   end
 
