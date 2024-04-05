@@ -112,8 +112,9 @@ defmodule Verzzatile do
         send(caller_pid, {:async_reply, {:error, {:already_connected, connected_cell}}})
         {:noreply, state}
 
-      (value = get_in(state, [cell2_id, :prev, dimension])) != nil ->
-        send(caller_pid, {:async_reply, {:error, {:cell2_next_not_nil, value}}})
+      (connected_id = get_in(state, [cell2_id, :prev, dimension])) != nil ->
+        connected_cell = get_in(state, [connected_id, :self])
+        send(caller_pid, {:async_reply, {:error, {:already_connected, connected_cell}}})
         {:noreply, state}
 
       true ->

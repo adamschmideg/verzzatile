@@ -22,7 +22,10 @@ defmodule VerzzatileTest do
   test "Cannot connect cells already connected" do
     {:ok, _pid} = Verzzatile.start_link()
     [c1, _, c3] = Verzzatile.add_many(['value1', 'value2', 'value3'], :friend)
+    new_cell = Verzzatile.add('value4')
     assert {:error, {:already_connected, _}} = Verzzatile.connect(c1, c3, :friend)
+    assert {:error, {:already_connected, _}} = Verzzatile.connect(c1, new_cell, :friend)
+    assert {:error, {:already_connected, _}} = Verzzatile.connect(new_cell, c3, :friend)
   end
 
   test "Connected cells are not connected in other dimensions" do
