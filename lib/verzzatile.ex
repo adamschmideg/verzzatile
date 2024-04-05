@@ -49,7 +49,7 @@ defmodule Verzzatile do
       receive do
         {:async_reply, response} -> response
       after
-        5000 -> IO.puts("Timeout waiting for async task to complete")
+        5000 -> {:error, :timeout}
       end
     end
   end
