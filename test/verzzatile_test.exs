@@ -19,6 +19,12 @@ defmodule VerzzatileTest do
     assert is_nil Verzzatile.prev(cell1, :friend)
   end
 
+  test "Cannot connect cells already connected" do
+    {:ok, _pid} = Verzzatile.start_link()
+    [c1, _, c3] = Verzzatile.add_many(['value1', 'value2', 'value3'], :friend)
+    assert {:error, {:already_connected, _}} = Verzzatile.connect(c1, c3, :friend)
+  end
+
   test "Connected cells are not connected in other dimensions" do
     {:ok, _pid} = Verzzatile.start_link()
     cell1 = Verzzatile.add('value1')
@@ -57,4 +63,14 @@ defmodule VerzzatileTest do
     path = Verzzatile.full_path(mid_cell, :friend)
     assert cells == path
   end
+
+  @tag :skip
+  test "Full path of a looped cell returns all cells in the loop" do
+    {:ok, _pid} = Verzzatile.start_link()
+    [c1, c2, c3] = Verzzatile.add_many(['value1', 'value2', 'value3'], :friend)
+    Verzzatile.connect(c3, c1, :friend)
+    path = Verzzatile.full_path(c1, :friend)
+    assert [c1, c2, c3] == path
+  end
+
 end

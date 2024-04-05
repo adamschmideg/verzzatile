@@ -44,7 +44,12 @@ defmodule Verzzatile do
   end
 
   def connect(cell_or_id1, cell_or_id2, dimension) do
-    GenServer.cast(__MODULE__, {:connect, get_id(cell_or_id1), get_id(cell_or_id2), dimension})
+    GenServer.cast(__MODULE__, {:connect, self(), get_id(cell_or_id1), get_id(cell_or_id2), dimension})
+    receive do
+      {:async_reply, response} -> response
+    after
+      5000 -> IO.puts("Timeout waiting for async task to complete")
+    end
   end
 
   def next(cell_or_id, dimension) do
@@ -54,7 +59,6 @@ defmodule Verzzatile do
   def prev(cell_or_id, dimension) do
     GenServer.call(__MODULE__, {:prev, get_id(cell_or_id), dimension})
   end
-
 
   def head(cell_or_id, dimension) do
     cell_id = get_id(cell_or_id)
@@ -99,18 +103,22 @@ defmodule Verzzatile do
   end
 
   @impl true
-  def handle_cast({:connect, cell1_id, cell2_id, dimension}, state) do
+  def handle_cast({:connect, caller_pid, cell1_id, cell2_id, dimension}, state) do
     cond do
-      (value = get_in(state, [cell1_id, :next, dimension])) != nil ->
-        {:error, {:cell1_next_not_nil, value}}
+      (connected_id = get_in(state, [cell1_id, :next, dimension])) != nil ->
+        connected_cell = get_in(state, [connected_id, :self])
+        send(caller_pid, {:async_reply, {:error, {:already_connected, connected_cell}}})
+        {:noreply, state}
 
       (value = get_in(state, [cell2_id, :prev, dimension])) != nil ->
-        {:error, {:cell2_prev_not_nil, value}}
+        send(caller_pid, {:async_reply, {:error, {:cell2_next_not_nil, value}}})
+        {:noreply, state}
 
       true ->
         updated_state = state
           |> update_in([cell1_id, :next, dimension], fn _ -> cell2_id end)
           |> update_in([cell2_id, :prev, dimension], fn _ -> cell1_id end)
+        send(caller_pid, {:async_reply, :ok})
         {:noreply, updated_state}
     end
   end
