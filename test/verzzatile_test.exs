@@ -51,6 +51,14 @@ defmodule VerzzatileTest do
     assert ['value1', 'value2', 'value3'] == Enum.map(cells, fn cell -> cell.value end)
   end
 
+  test "You can create a loop" do
+    {:ok, _pid} = Verzzatile.start_link()
+    [c1, _c2, c3] = Verzzatile.add_many(['value1', 'value2', 'value3'], :friend)
+    assert :ok = Verzzatile.connect(c3, c1, :friend)
+    assert c1 == Verzzatile.next(c3, :friend)
+    assert c3 == Verzzatile.prev(c1, :friend)
+  end
+
   test "Get head cell of a given cell in a given dimension" do
     {:ok, _pid} = Verzzatile.start_link()
     cells = Verzzatile.add_many(['value1', 'value2', 'value3'], :friend)

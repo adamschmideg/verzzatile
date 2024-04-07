@@ -7,6 +7,14 @@ defmodule Verzzatile do
     defstruct id_to_cell: %{}
   end
 
+  defmodule Cell do
+    defstruct id: nil, value: nil
+  end
+
+  defmodule FullCell do
+    defstruct self: Cell, next: %{}, prev: %{}, head: %{}
+  end
+
   use GenServer
 
   # Client API
@@ -39,12 +47,13 @@ defmodule Verzzatile do
     cells
   end
 
-  def get(cell_or_id) do
-    GenServer.call(__MODULE__, {:get, get_id(cell_or_id)})
-  end
+  def get(%{id: id}), do: get(id)
+  def get(id), do: GenServer.call(__MODULE__, {:get, id})
 
-  def connect(cell_or_id1, cell_or_id2, dimension, wait? \\ true) do
-    GenServer.cast(__MODULE__, {:connect, self(), get_id(cell_or_id1), get_id(cell_or_id2), dimension})
+  def connect(from, to, dimension, wait? \\ true)
+  def connect(%{id: from}, %{id: to}, dimension, wait?), do: connect(from, to, dimension, wait?)
+  def connect(from_id, to_id, dimension, wait?) do
+    GenServer.cast(__MODULE__, {:connect, self(), from_id, to_id, dimension})
     if wait? do
       receive do
         {:async_reply, response} -> response
@@ -54,13 +63,11 @@ defmodule Verzzatile do
     end
   end
 
-  def next(cell_or_id, dimension) do
-    GenServer.call(__MODULE__, {:next, get_id(cell_or_id), dimension})
-  end
+  def next(%{id: id}, dimension), do: next(id, dimension)
+  def next(id, dimension), do: GenServer.call(__MODULE__, {:next, id, dimension})
 
-  def prev(cell_or_id, dimension) do
-    GenServer.call(__MODULE__, {:prev, get_id(cell_or_id), dimension})
-  end
+  def prev(%{id: id}, dimension), do: prev(id, dimension)
+  def prev(id, dimension), do: GenServer.call(__MODULE__, {:prev, id, dimension})
 
   def head(cell_or_id, dimension) do
     cell_id = get_id(cell_or_id)
