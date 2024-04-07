@@ -2,6 +2,22 @@ defmodule VerzzatileTest do
   use ExUnit.Case
   doctest Verzzatile
 
+  test "FullCell fetches a key" do
+    cell = Verzzatile.Cell.new('value')
+    full_cell = Verzzatile.FullCell.new(cell)
+    full_cell = %Verzzatile.FullCell{full_cell | next: %{friend: cell.id}}
+    assert cell.id == get_in(full_cell, [:next, :friend])
+    assert is_nil get_in(full_cell, [:next, :enemy, :id])
+
+    full_cell = put_in(full_cell, [:next, :enemy], cell.id)
+    assert cell.id == get_in(full_cell, [:next, :enemy])
+  end
+
+  test "Getting a non-existent cell returns nil" do
+    {:ok, _pid} = Verzzatile.start_link()
+    assert is_nil Verzzatile.get(1)
+  end
+
   test "Gets a cell that was added" do
     {:ok, _pid} = Verzzatile.start_link()
     cell = Verzzatile.add('value')
