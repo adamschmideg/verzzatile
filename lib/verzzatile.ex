@@ -23,13 +23,6 @@ defmodule Verzzatile do
     GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
   end
 
-  defp get_id(cell_or_id) do
-    case cell_or_id do
-      %{} -> cell_or_id[:id]
-      _ -> cell_or_id
-    end
-  end
-
   @doc """
   Wraps the value in a cell, stores it, and returns the cell.
   """
@@ -69,9 +62,7 @@ defmodule Verzzatile do
   def prev(%{id: id}, dimension), do: prev(id, dimension)
   def prev(id, dimension), do: GenServer.call(__MODULE__, {:prev, id, dimension})
 
-  def head(cell_or_id, dimension) do
-    cell_id = get_id(cell_or_id)
-    cell = get(cell_id)
+  def head(cell = %{}, dimension) do
     Enum.reduce_while([cell], nil, fn cell, _acc ->
       prev_cell = prev(cell, dimension)
       case prev_cell do
@@ -80,12 +71,14 @@ defmodule Verzzatile do
       end
     end)
   end
+  def head(id, dimension), do: head(get(id), dimension)
 
   @doc """
   Returns the cells connected to the given cell in the given dimension.
   """
-  def full_path(cell_or_id, dimension) do
-    head = head(cell_or_id, dimension)
+  def full_path(%{id: id}, dimension), do: full_path(id, dimension)
+  def full_path(id, dimension) do
+    head = head(id, dimension)
     full_path_from_head(head, dimension)
   end
 
