@@ -54,6 +54,11 @@ defmodule Verzzatile do
     cell
   end
 
+  def add(state, cell = %Cell{}) do
+    full_cell = FullCell.new(cell)
+    Map.put(state, cell.id, full_cell)
+  end
+
   def add_many(values, dimension) do
     cells = Enum.map(values, fn value -> add(value) end)
     cells
@@ -64,6 +69,9 @@ defmodule Verzzatile do
 
   def get(%Cell{id: id}), do: get(id)
   def get(id), do: GenServer.call(__MODULE__, {:get, id})
+  def get(state, id) do
+    get_in(state, [id, :self])
+  end
 
   def connect(from, to, dimension, wait? \\ true)
   def connect(%Cell{id: from}, %Cell{id: to}, dimension, wait?), do: connect(from, to, dimension, wait?)
@@ -81,8 +89,19 @@ defmodule Verzzatile do
   def next(%Cell{id: id}, dimension), do: next(id, dimension)
   def next(id, dimension), do: GenServer.call(__MODULE__, {:next, id, dimension})
 
+  def next(state, %Cell{id: id}, dimension) do
+    full_cell = state[id]
+    next_cell_id = full_cell.next[dimension]
+    get_in(state, [next_cell_id, :self])
+  end
+
   def prev(%Cell{id: id}, dimension), do: prev(id, dimension)
   def prev(id, dimension), do: GenServer.call(__MODULE__, {:prev, id, dimension})
+
+  def prev(state, %Cell{id: id}, dimension) do
+    id = get_in(state, [id, :prev, dimension])
+    get_in(state, [id, :self])
+  end
 
   def head(cell = %Cell{}, dimension) do
     Enum.reduce_while([cell], nil, fn cell, _acc ->
@@ -94,6 +113,16 @@ defmodule Verzzatile do
     end)
   end
   def head(id, dimension), do: head(get(id), dimension)
+
+  def walk_to_head(state, cell = %Cell{}, dimension) do
+    Enum.reduce_while([cell], nil, fn cell, _acc ->
+      prev_cell = prev(state, cell, dimension)
+      case prev_cell do
+        nil -> {:halt, cell}
+        _ -> {:cont, prev_cell}
+      end
+    end)
+  end
 
   @doc """
   Returns the cells connected to the given cell in the given dimension.
