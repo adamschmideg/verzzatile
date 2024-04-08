@@ -127,16 +127,16 @@ defmodule Verzzatile do
   end
 
   @impl true
-  def handle_cast({:connect, caller_pid, cell1_id, cell2_id, dimension}, state) do
-    next_cell = get_in(state, [cell1_id, :next, dimension])
-    prev_cell = get_in(state, [cell2_id, :prev, dimension])
+  def handle_cast({:connect, caller_pid, from_id, to_id, dimension}, state) do
+    next_cell = get_in(state, [from_id, :next, dimension])
+    prev_cell = get_in(state, [to_id, :prev, dimension])
     if next_cell != nil or prev_cell != nil do
       send(caller_pid, {:async_reply, {:error, {:already_connected, next_cell || prev_cell}}})
       {:noreply, state}
     else
       updated_state = state
-        |> update_in([cell1_id, :next, dimension], fn _ -> cell2_id end)
-        |> update_in([cell2_id, :prev, dimension], fn _ -> cell1_id end)
+        |> put_in([from_id, :next, dimension], to_id)
+        |> put_in([to_id, :prev, dimension], from_id)
       send(caller_pid, {:async_reply, :ok})
       {:noreply, updated_state}
     end
