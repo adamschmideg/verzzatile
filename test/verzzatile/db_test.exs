@@ -1,7 +1,8 @@
 defmodule Verzzatile.DbTest do
   use ExUnit.Case
-  alias Verzzatile.Cell
-  import Verzzatile.Db, only: [add: 2, get: 2, connect: 4, next: 3, prev: 3]
+  alias Verzzatile.State
+  alias Verzzatile.Cursor
+  import Verzzatile.Db, only: [move_cursor: 2]
 
   test "FullCell fetches a key" do
     cell = Verzzatile.Cell.new('value')
@@ -14,15 +15,14 @@ defmodule Verzzatile.DbTest do
     assert cell.id == get_in(full_cell, [:next, :enemy])
   end
 
-  test "Connect two cells" do
-    from = Cell.new('value1')
-    to = Cell.new('value2')
-    {:ok, state} = %{}
-      |> add(from)
-      |> add(to)
-      |> connect(from, to, :friend)
-    assert to = next(state, from, :friend)
-    assert from = prev(state, to, :friend)
+  test "Move cursor" do
+    state = State.new()
+    new_state = move_cursor(state, %Cursor{dimension: :friend})
+    assert new_state.errors == []
+    assert new_state.dimensions[:friend]
+    assert new_state.cursors[0]  == %Cursor{dimension: :friend, id: state.origin.id}
+    unknown_id = 42
+    assert {:cell_not_found, _} = move_cursor(state, %Cursor{id: unknown_id}).errors
   end
 
 end

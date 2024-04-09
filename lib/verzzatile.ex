@@ -34,10 +34,69 @@ defmodule Verzzatile do
         {:error, data}
       end
     end
+  end
 
+  defmodule Cursor do
+    defstruct id: nil, dimension: nil
+  end
+
+  defmodule State do
+    defstruct cells: %{}, next: %{}, prev: %{}, errors: [], dimensions: %{}, cursors: %{}, origin: nil
+
+    def new do
+      origin = Cell.new(nil)
+      %State{cells: %{origin.id => origin},
+             dimensions: %{home: 0},
+             cursors: %{0 => %Cursor{id: origin.id, dimension: :home}},
+             origin: origin,
+             next: %{},
+             prev: %{},
+             errors: []}
+    end
+
+    def fetch(%State{} = struct, key) do
+      case Map.fetch(struct, key) do
+        {:ok, value} -> {:ok, value}
+        :error -> :error
+      end
+    end
+
+    def get_and_update(data, key, fun) when is_map(data) do
+      if Map.has_key?(data, key) do
+        old_value = Map.fetch!(data, key)
+        {_, new_value} = fun.(old_value)
+        {old_value, Map.put(data, key, new_value)}
+      else
+        {:error, data}
+      end
+    end
   end
 
   defmodule Db do
+    defp ensure_dimension(state, dimension) do
+      if Map.has_key?(state.dimensions, dimension) do
+        state
+      else
+        put_in(state, [:dimensions, dimension], map_size(state.dimensions))
+      end
+    end
+
+    defp add_error(state, error) do
+      put_in(state, [:errors], error)
+    end
+
+    def move_cursor(state, cursor) do
+      if cursor.id && state.cells[cursor.id] == nil do
+        add_error(state, {:cell_not_found, cursor})
+      else
+        old = state.cursors[0]
+        new_dimension = cursor.dimension || old.dimension
+        new_id = cursor.id || old.id
+        updated_state = ensure_dimension(state, new_dimension)
+        new_cursor = %Cursor{id: new_id, dimension: new_dimension}
+        put_in(updated_state, [:cursors, 0], new_cursor)
+      end
+    end
 
     def add(state, cell = %Cell{}) do
       full_cell = FullCell.new(cell)
