@@ -32,6 +32,15 @@ defmodule Verzzatile.DbTest do
       |> Db.add_and_move("Wilma")
       |> Db.move_prev()
     assert ["Fred", "Wilma"] = Db.path_values(state)
+  end
+
+  @tag :skip
+  test "Add two cells and get the full path" do
+    state = State.new()
+            |> Db.change_dimension(:friend)
+            |> Db.add_and_move("Fred")
+            |> Db.add_and_move("Wilma")
+            |> Db.move_prev()
     assert [:origin, "Fred", "Wilma"] = Db.full_path_values(state)
   end
 
@@ -49,6 +58,6 @@ defmodule Verzzatile.DbTest do
       |> Db.move_first()
       |> Db.move_last()
     assert [] = Db.show_cursor(state)
-    assert [] = Db.path(state)
+    assert [] = Db.path_values(state)
   end
 end

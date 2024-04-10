@@ -31,6 +31,8 @@ cells. The primary cursor is the one that is used to perform operations, unless 
 - `@`: Go home (move to the origin cell and set the default dimension).
 - `#X`: Change dimension to X. If X doesn't exist, create it.
 - `~`: Swap primary and secondary cursors.
+- `||`: Move the secondary cursor to the same cell and dimension as the primary cursor.
+
  
 ### Changing Data
 These operations involve modifying cell values or the connections between cells.
