@@ -157,9 +157,9 @@ defmodule Verzzatile do
     def move_last(state) do
       cursor = state.cursors[0]
       cell = state.cells[cursor.id]
-      path = path(state, cell, cursor.dimension)
-      last = Enum.at(path, -1)
-      put_in(state, [:cursors, 0, :id], last.id)
+      path = path_ids(state, cell, cursor.dimension)
+      last_id = Enum.at(path, -1)
+      put_in(state, [:cursors, 0, :id], last_id)
     end
 
     def go_home(state) do
@@ -193,14 +193,15 @@ defmodule Verzzatile do
     def path_values(state) do
       cursor = state.cursors[0]
       cell = state.cells[cursor.id]
-      path(state, cell, cursor.dimension) |> Enum.map(fn cell -> cell.value end)
+      path_ids(state, cell, cursor.dimension)
+        |> Enum.map(fn id -> state.cells[id].value end)
     end
 
     def full_path_values(state) do
       cursor = state.cursors[0]
       head_id = get_in(state, [:head, cursor.id, cursor.dimension])
       head = state.cells[head_id]
-      path(state, head, cursor.dimension) |> Enum.map(fn cell -> cell.value end)
+      path_ids(state, head, cursor.dimension) |> Enum.map(fn cell -> cell.value end)
     end
 
     def show_cursor(state) do
@@ -209,14 +210,16 @@ defmodule Verzzatile do
       {cursor.dimension, cell.value}
     end
 
-    defp path(state, cell = %Cell{}, dimension) do
-      Enum.reduce_while([cell], nil, fn cell, _acc ->
-        next_id = get_in(state, [:next, cell.id, dimension])
-        case next_id do
-          nil -> {:halt, cell}
-          _ -> {:cont, state.cells[next_id]}
-        end
-      end)
+    defp path_ids(state, cell = %Cell{}, dimension) do
+      get_path_ids(state, cell.id, dimension, [cell.id])
+    end
+
+    defp get_path_ids(state, id, dimension, acc) do
+      next_id = get_in(state, [:next, id, dimension])
+      case next_id do
+        nil -> Enum.reverse(acc)
+        _ -> get_path_ids(state, next_id, dimension, [next_id | acc])
+      end
     end
 
   end
