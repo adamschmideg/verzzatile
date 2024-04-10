@@ -19,6 +19,10 @@ defmodule Verzzatile.DbTest do
       |> Db.change_dimension(:friend)
       |> Db.add_and_move("Fred")
     assert {:friend, "Fred"} = Db.show_cursor(state)
+    new_cursor = state
+      |> Db.move_prev()
+      |> Db.show_cursor()
+    assert {:friend, :origin} = new_cursor
   end
 
   @tag :skip

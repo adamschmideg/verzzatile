@@ -206,7 +206,6 @@ defmodule Verzzatile do
     def show_cursor(state) do
       cursor = state.cursors[0]
       cell = state.cells[cursor.id]
-      IO.inspect({:show_cursor, cursor, cell, state})
       {cursor.dimension, cell.value}
     end
 
