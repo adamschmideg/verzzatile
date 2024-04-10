@@ -196,8 +196,9 @@ defmodule Verzzatile do
 
     def connect_cursors(state) do
       cursor1 = state.cursors[0]
-      cursor2 = state.cursors[1]
-      connect(state, cursor1, cursor2, cursor1.dimension)
+      from = state.cells[cursor1.id]
+      to = state.cells[state.cursors[1].id]
+      connect(state, from, to, cursor1.dimension)
     end
 
     def add_and_move(state, value) do
