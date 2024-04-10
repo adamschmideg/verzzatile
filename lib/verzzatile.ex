@@ -221,7 +221,8 @@ defmodule Verzzatile do
       cursor = state.cursors[0]
       head_id = get_in(state, [:head, cursor.id, cursor.dimension])
       head = state.cells[head_id]
-      path_ids(state, head, cursor.dimension) |> Enum.map(fn cell -> cell.value end)
+      path_ids(state, head, cursor.dimension)
+        |> Enum.map(fn id -> state.cells[id].value end)
     end
 
     def show_cursor(state) do

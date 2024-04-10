@@ -42,8 +42,7 @@ defmodule Verzzatile.DbTest do
     assert {:home, :origin} = Db.show_cursor(state)
   end
 
-  @tag :skip
-  test "Add two cells and get the full path" do
+  test "Get the full path" do
     state = State.new()
             |> Db.change_dimension(:friend)
             |> Db.add_and_move("Fred")
