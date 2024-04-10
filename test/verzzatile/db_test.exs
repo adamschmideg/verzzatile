@@ -32,6 +32,7 @@ defmodule Verzzatile.DbTest do
       |> Db.add_and_move("Wilma")
       |> Db.move_prev()
     assert ["Fred", "Wilma"] = Db.path_values(state)
+    assert [:origin, "Fred", "Wilma"] = Db.full_path_values(state)
   end
 
   @tag :skip
