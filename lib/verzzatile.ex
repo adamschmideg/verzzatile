@@ -58,7 +58,7 @@ defmodule Verzzatile do
   end
 
   defmodule State do
-    defstruct cells: %{}, next: %{}, prev: %{}, errors: [], dimensions: %{}, cursors: %{}, origin: nil
+    defstruct cells: %{}, next: %{}, prev: %{}, head: %{}, errors: [], dimensions: %{}, cursors: %{}, origin: nil
 
     def new do
       origin = Cell.new(:origin)
@@ -69,6 +69,7 @@ defmodule Verzzatile do
              origin: origin,
              next: %{},
              prev: %{},
+             head: %{},
              errors: []}
     end
 
@@ -115,8 +116,27 @@ defmodule Verzzatile do
           updated_state = state
                           |> put_in([:next, from.id], new_next_ids)
                           |> put_in([:prev, to.id], new_prev_ids)
-          updated_state
+          head_id = get_in(state, [:head, from.id, dimension]) || from.id
+          path = [from.id | path_ids(state, to, dimension)]
+          change_head_ids(updated_state, path, head_id, dimension)
       end
+    end
+
+    defp change_head_ids(state, path, head_id, dimension) do
+      Enum.reduce(path, state, fn id, acc_state ->
+        dimension_path = [:head, id, dimension]
+        id_path = [:head, id]
+
+        # Check if the dimension exists for the id
+        case get_in(acc_state, dimension_path) do
+          nil ->
+            # Dimension doesn't exist; create a new map for the id with dimension => head_id
+            put_in(acc_state, id_path, %{dimension => head_id})
+          _ ->
+            # Dimension exists; update it with head_id
+            put_in(acc_state, dimension_path, head_id)
+        end
+      end)
     end
 
     def change_dimension(state, dimension) do

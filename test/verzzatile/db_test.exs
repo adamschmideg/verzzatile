@@ -34,6 +34,14 @@ defmodule Verzzatile.DbTest do
     assert ["Fred", "Wilma"] = Db.path_values(state)
   end
 
+  test "Move to the first cell" do
+    state = State.new()
+      |> Db.add_and_move("Fred")
+      |> Db.add_and_move("Wilma")
+      |> Db.move_first()
+    assert {:home, :origin} = Db.show_cursor(state)
+  end
+
   @tag :skip
   test "Add two cells and get the full path" do
     state = State.new()
