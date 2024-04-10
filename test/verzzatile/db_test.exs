@@ -1,8 +1,7 @@
 defmodule Verzzatile.DbTest do
   use ExUnit.Case
   alias Verzzatile.State
-  alias Verzzatile.Cursor
-  import Verzzatile.Db, only: [move_cursor: 2]
+  alias Verzzatile.Db
 
   test "FullCell fetches a key" do
     cell = Verzzatile.Cell.new('value')
@@ -15,14 +14,27 @@ defmodule Verzzatile.DbTest do
     assert cell.id == get_in(full_cell, [:next, :enemy])
   end
 
-  test "Move cursor" do
+  test "Add a cell and move the cursor" do
     state = State.new()
-    new_state = move_cursor(state, %Cursor{dimension: :friend})
-    assert new_state.errors == []
-    assert new_state.dimensions[:friend]
-    assert new_state.cursors[0]  == %Cursor{dimension: :friend, id: state.origin.id}
-    unknown_id = 42
-    assert {:cell_not_found, _} = move_cursor(state, %Cursor{id: unknown_id}).errors
+      |> Db.change_dimension(:friend)
+      |> Db.add_and_move("Fred")
+    assert {:friend, "Fred"} = Db.show_cursor(state)
   end
 
+  @tag :skip
+  test "All functions in Db module work" do
+    state = State.new()
+      |> Db.change_dimension(:friend)
+      |> Db.add_and_move('value1')
+      |> Db.move_prev()
+      |> Db.add_and_move('value2')
+      |> Db.swap_cursors()
+      |> Db.move_next()
+      |> Db.swap_cursors()
+      |> Db.connect_cursors()
+      |> Db.move_first()
+      |> Db.move_last()
+    assert [] = Db.show_cursor(state)
+    assert [] = Db.path(state)
+  end
 end

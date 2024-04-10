@@ -38,16 +38,34 @@ defmodule Verzzatile do
 
   defmodule Cursor do
     defstruct id: nil, dimension: nil
+
+    def fetch(%Cursor{} = struct, key) do
+      case Map.fetch(struct, key) do
+        {:ok, value} -> {:ok, value}
+        :error -> :error
+      end
+    end
+
+    def get_and_update(data, key, fun) when is_map(data) do
+      if Map.has_key?(data, key) do
+        old_value = Map.fetch!(data, key)
+        {_, new_value} = fun.(old_value)
+        {old_value, Map.put(data, key, new_value)}
+      else
+        {:error, data}
+      end
+    end
   end
 
   defmodule State do
     defstruct cells: %{}, next: %{}, prev: %{}, errors: [], dimensions: %{}, cursors: %{}, origin: nil
 
     def new do
-      origin = Cell.new(nil)
+      origin = Cell.new(:origin)
+      cursor = %Cursor{id: origin.id, dimension: :home}
       %State{cells: %{origin.id => origin},
              dimensions: %{home: 0},
-             cursors: %{0 => %Cursor{id: origin.id, dimension: :home}},
+             cursors: %{0 => cursor, 1 => cursor},
              origin: origin,
              next: %{},
              prev: %{},
@@ -85,61 +103,121 @@ defmodule Verzzatile do
       put_in(state, [:errors], error)
     end
 
-    def move_cursor(state, cursor) do
-      if cursor.id && state.cells[cursor.id] == nil do
-        add_error(state, {:cell_not_found, cursor})
-      else
-        old = state.cursors[0]
-        new_dimension = cursor.dimension || old.dimension
-        new_id = cursor.id || old.id
-        updated_state = ensure_dimension(state, new_dimension)
-        new_cursor = %Cursor{id: new_id, dimension: new_dimension}
-        put_in(updated_state, [:cursors, 0], new_cursor)
+    defp connect(state, from, to, dimension) do
+      next = get_in(state, [:next, from.id, dimension])
+      prev = get_in(state, [:prev, to.id, dimension])
+      cond do
+        next != nil -> add_error(state, {:already_connected, from, next})
+        prev != nil -> add_error(state, {:already_connected, prev, to})
+        true ->
+          new_next_ids = state.next[from.id] || %{} |> Map.put(dimension, to.id)
+          new_prev_ids = state.prev[to.id] || %{} |> Map.put(dimension, from.id)
+          updated_state = state
+                          |> put_in([:next, from.id], new_next_ids)
+                          |> put_in([:prev, to.id], new_prev_ids)
+          updated_state
       end
     end
 
-    def add(state, cell = %Cell{}) do
-      full_cell = FullCell.new(cell)
-      Map.put(state, cell.id, full_cell)
+    def change_dimension(state, dimension) do
+      updated_state = ensure_dimension(state, dimension)
+      put_in(updated_state, [:cursors, 0, :dimension], dimension)
     end
 
-    def get(state, id) do
-      get_in(state, [id, :self])
+    def move_next(state) do
+      cursor = state.cursors[0]
+      next_id = get_in(state, [:next, cursor.id, cursor.dimension])
+      if next_id do
+        put_in(state, [:cursors, 0, :id], next_id)
+      else
+        add_error(state, {:no_next_cell, cursor})
+      end
     end
 
-    def next(state, %Cell{id: id}, dimension) do
-      full_cell = state[id]
-      next_cell_id = full_cell.next[dimension]
-      get_in(state, [next_cell_id, :self])
+    def move_prev(state) do
+      cursor = state.cursors[0]
+      prev_id = get_in(state, [:prev, cursor.id, cursor.dimension])
+      if prev_id do
+        put_in(state, [:cursors, 0, :id], prev_id)
+      else
+        add_error(state, {:no_prev_cell, cursor})
+      end
     end
 
-    def prev(state, %Cell{id: id}, dimension) do
-      id = get_in(state, [id, :prev, dimension])
-      get_in(state, [id, :self])
+    def move_first(state) do
+      cursor = state.cursors[0]
+      head_id = get_in(state, [:head, cursor.id, cursor.dimension])
+      if head_id do
+        put_in(state, [:cursors, 0, :id], head_id)
+      else
+        add_error(state, {:no_head_cell, cursor})
+      end
     end
 
-    def path(state, cell = %Cell{}, dimension) do
+    def move_last(state) do
+      cursor = state.cursors[0]
+      cell = state.cells[cursor.id]
+      path = path(state, cell, cursor.dimension)
+      last = Enum.at(path, -1)
+      put_in(state, [:cursors, 0, :id], last.id)
+    end
+
+    def go_home(state) do
+      put_in(state, [:cursors, 0], state.origin)
+        |> change_dimension(:home)
+    end
+
+    def swap_cursors(state) do
+      cursor1 = state.cursors[0]
+      cursor2 = state.cursors[1]
+      put_in(state, [:cursors, 0], cursor2)
+        |> put_in([:cursors, 1], cursor1)
+    end
+
+    def connect_cursors(state) do
+      cursor1 = state.cursors[0]
+      cursor2 = state.cursors[1]
+      connect(state, cursor1, cursor2, cursor1.dimension)
+    end
+
+    def add_and_move(state, value) do
+      cursor = state.cursors[0]
+      cell = Cell.new(value)
+      from = state.cells[cursor.id]
+      state
+        |> put_in([:cells, cell.id], cell)
+        |> connect(from, cell, cursor.dimension)
+        |> move_next
+    end
+
+    def path_values(state) do
+      cursor = state.cursors[0]
+      cell = state.cells[cursor.id]
+      path(state, cell, cursor.dimension) |> Enum.map(fn cell -> cell.value end)
+    end
+
+    def full_path_values(state) do
+      cursor = state.cursors[0]
+      head_id = get_in(state, [:head, cursor.id, cursor.dimension])
+      head = state.cells[head_id]
+      path(state, head, cursor.dimension) |> Enum.map(fn cell -> cell.value end)
+    end
+
+    def show_cursor(state) do
+      cursor = state.cursors[0]
+      cell = state.cells[cursor.id]
+      IO.inspect({:show_cursor, cursor, cell, state})
+      {cursor.dimension, cell.value}
+    end
+
+    defp path(state, cell = %Cell{}, dimension) do
       Enum.reduce_while([cell], nil, fn cell, _acc ->
-        next_cell = next(state, cell, dimension)
-        case next_cell do
+        next_id = get_in(state, [:next, cell.id, dimension])
+        case next_id do
           nil -> {:halt, cell}
-          _ -> {:cont, next_cell}
+          _ -> {:cont, state.cells[next_id]}
         end
       end)
-    end
-
-    def connect(state, from=%Cell{}, to=%Cell{}, dimension) do
-      next = get_in(state, [from.id, :next, dimension])
-      prev = get_in(state, [to.id, :prev, dimension])
-      cond do
-        next != nil -> {:error, {:already_connected, from, next}, state}
-        prev != nil -> {:error, {:already_connected, prev, to}, state}
-        true ->
-          updated_state = state
-                          |> put_in([from.id, :next, dimension], to.id)
-                          |> put_in([to.id, :prev, dimension], from.id)
-          {:ok, updated_state}
-      end
     end
 
   end
