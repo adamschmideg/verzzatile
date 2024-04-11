@@ -1,7 +1,39 @@
 defmodule Verzzatile.DbTest do
   use ExUnit.Case
+  use ExUnitProperties
   alias Verzzatile.State
   alias Verzzatile.Db
+
+  import StreamData
+
+  @operations %{
+    :move_next => nil,
+    :change_dimension => [:east, :west, :north, :south]
+  }
+
+  def operation_gen() do
+    @operations
+    |> Map.keys()
+    |> Enum.map(&constant(&1))
+    |> one_of()
+    |> StreamData.map(fn f -> if args = @operations[f], do: {f, Enum.random(args)}, else: {f, nil} end)
+  end
+
+
+  property "apply operations sequence without exceptions" do
+    check all operations <- list_of(operation_gen(), min_length: 1, max_length: 10) do
+      state = State.new()
+      Enum.reduce(operations, state, fn {op, args}, acc_state ->
+        if args == nil do
+          apply(Db, op, [acc_state])
+        else
+          apply(Db, op, [acc_state, args])
+        end
+      end)
+
+      assert true
+    end
+  end
 
   test "FullCell fetches a key" do
     cell = Verzzatile.Cell.new('value')
