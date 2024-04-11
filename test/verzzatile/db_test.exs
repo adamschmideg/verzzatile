@@ -61,6 +61,15 @@ defmodule Verzzatile.DbTest do
     assert ["Abroad", :origin] = Db.full_path_values(state)
   end
 
+  test "Jumping with cursor" do
+    state = State.new()
+            |> Db.add_and_move("Abroad")
+            |> Db.change_dimension(:travel)
+            |> Db.cursor(1)
+            |> Db.jump(0)
+    assert {:travel, "Abroad"} = Db.show_cursor(state)
+  end
+
   @tag :skip
   test "All functions in Db module work" do
     state = State.new()
@@ -72,6 +81,7 @@ defmodule Verzzatile.DbTest do
       |> Db.cursor(1)
       |> Db.connect_cursor(0)
       |> Db.move_first()
+      |> Db.jump(0)
       |> Db.move_last()
     assert [] = Db.show_cursor(state)
     assert [] = Db.path_values(state)
