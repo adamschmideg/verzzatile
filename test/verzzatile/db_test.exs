@@ -55,16 +55,9 @@ defmodule Verzzatile.DbTest do
     state = State.new()
             |> Db.add_and_move("Abroad")
             |> Db.change_dimension(:travel)
-            |> Db.connect_cursors()
-    assert ["Abroad", :origin] = Db.full_path_values(state)
-  end
-
-  @tag :skip
-  test "Connect cursors with a problem" do
-    state = State.new()
-            |> Db.change_dimension(:travel)
-            |> Db.add_and_move("Abroad")
-            |> Db.connect_cursors()
+            |> Db.cursor(1)
+            |> Db.cursor(0)
+            |> Db.connect_cursor(1)
     assert ["Abroad", :origin] = Db.full_path_values(state)
   end
 
@@ -75,10 +68,9 @@ defmodule Verzzatile.DbTest do
       |> Db.add_and_move('value1')
       |> Db.move_prev()
       |> Db.add_and_move('value2')
-      |> Db.swap_cursors()
       |> Db.move_next()
-      |> Db.swap_cursors()
-      |> Db.connect_cursors()
+      |> Db.cursor(1)
+      |> Db.connect_cursor(0)
       |> Db.move_first()
       |> Db.move_last()
     assert [] = Db.show_cursor(state)

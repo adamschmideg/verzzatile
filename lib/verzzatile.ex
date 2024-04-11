@@ -58,15 +58,17 @@ defmodule Verzzatile do
   end
 
   defmodule State do
-    defstruct cells: %{}, next: %{}, prev: %{}, head: %{}, errors: [], dimensions: %{}, cursors: %{}, origin: nil
+    defstruct cells: %{}, next: %{}, prev: %{}, head: %{}, errors: [], dimensions: %{}, cursors: %{}, origin: nil, cursor_name: nil
 
     def new do
       origin = Cell.new(:origin)
       cursor = %Cursor{id: origin.id, dimension: :home}
+      cursor_name = 0
       %State{cells: %{origin.id => origin},
              dimensions: %{home: 0},
-             cursors: %{0 => cursor, 1 => cursor},
+             cursors: %{cursor_name => cursor},
              origin: origin,
+             cursor_name: 0,
              next: %{},
              prev: %{},
              head: %{},
@@ -97,6 +99,15 @@ defmodule Verzzatile do
         state
       else
         put_in(state, [:dimensions, dimension], map_size(state.dimensions))
+      end
+    end
+
+    def cursor(state, cursor_name) do
+      state = %{state | cursor_name: cursor_name}
+      if Map.has_key?(state.cursors, cursor_name) do
+        state
+      else
+        put_in(state, [:cursors, cursor_name], %Cursor{id: state.origin.id, dimension: :home})
       end
     end
 
@@ -183,26 +194,24 @@ defmodule Verzzatile do
     end
 
     def go_home(state) do
-      put_in(state, [:cursors, 0], state.origin)
+      put_in(state, [:cursors, state.cursor_name], state.origin)
         |> change_dimension(:home)
     end
 
-    def swap_cursors(state) do
-      cursor1 = state.cursors[0]
-      cursor2 = state.cursors[1]
-      put_in(state, [:cursors, 0], cursor2)
-        |> put_in([:cursors, 1], cursor1)
-    end
-
-    def connect_cursors(state) do
-      cursor1 = state.cursors[0]
-      from = state.cells[cursor1.id]
-      to = state.cells[state.cursors[1].id]
-      connect(state, from, to, cursor1.dimension)
+    def connect_cursor(state, other_cursor_name) do
+      other_cursor = state.cursors[other_cursor_name]
+      if other_cursor do
+        cursor = current_cursor(state)
+        from = state.cells[cursor.id]
+        to = state.cells[other_cursor.id]
+        connect(state, from, to, cursor.dimension)
+      else
+        add_error(state, {:no_cursor, other_cursor_name})
+      end
     end
 
     def add_and_move(state, value) do
-      cursor = state.cursors[0]
+      cursor = current_cursor(state)
       cell = Cell.new(value)
       from = state.cells[cursor.id]
       state
@@ -212,22 +221,26 @@ defmodule Verzzatile do
     end
 
     def path_values(state) do
-      cursor = state.cursors[0]
+      cursor = current_cursor(state)
       cell = state.cells[cursor.id]
       path_ids(state, cell, cursor.dimension)
         |> Enum.map(fn id -> state.cells[id].value end)
     end
 
     def full_path_values(state) do
-      cursor = state.cursors[0]
+      cursor = current_cursor(state)
       head_id = get_in(state, [:head, cursor.id, cursor.dimension])
       head = state.cells[head_id]
       path_ids(state, head, cursor.dimension)
         |> Enum.map(fn id -> state.cells[id].value end)
     end
 
+    defp current_cursor(state) do
+      state.cursors[state.cursor_name]
+    end
+
     def show_cursor(state) do
-      cursor = state.cursors[0]
+      cursor = current_cursor(state)
       cell = state.cells[cursor.id]
       {cursor.dimension, cell.value}
     end

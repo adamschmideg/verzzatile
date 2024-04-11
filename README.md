@@ -21,8 +21,8 @@ Here are the operations that change the zzstructure. Note that the errors messag
 are part of the zzstructure.
 
 ### Navigation (Cursor Movements)
-These commands are for navigating the zzstructure. They allow you to move the primary and secondary cursors to different
-cells. The primary cursor is the one that is used to perform operations, unless otherwise specified.
+These commands are for navigating the zzstructure. They allow you to move the cursors to different
+cells. The current cursor is the one that is used to perform operations, unless otherwise specified.
 
 - `>`: Move to the next cell.
 - `<`: Move to the previous cell.
@@ -30,8 +30,8 @@ cells. The primary cursor is the one that is used to perform operations, unless 
 - `$`: Move to the last cell.
 - `@`: Go home (move to the origin cell and set the default dimension).
 - `#X`: Change dimension to X. If X doesn't exist, create it.
-- `~`: Swap primary and secondary cursors.
-- `||`: Move the secondary cursor to the same cell and dimension as the primary cursor.
+- `cursor X`: Make cursor X the current cursor. If X doesn't exist, create it.
+- `jump X`: Jump with the current cursor to cursor X.
 
  
 ### Changing Data
@@ -39,7 +39,7 @@ These operations involve modifying cell values or the connections between cells.
 
 - `,value`: Add a new cell at the primary cursor with the specified value. Then move to the new cell. You can add
   multiple consecutive cells at once by separating the values with commas.
-- `&`: Connect the cell at the primary cursor with the cell at the secondary cursor in the dimension of the primary
+- `&X`: Connect the cell at the current cursor with the cell at cursor X in the dimension of the current
   cursor.
 
 ### Reading
@@ -50,3 +50,13 @@ Reads don't affect the cursors.
 - `==`: Get the values along the path from the primary cursor along the next cells.
 - `===`: Read all cells along a path, from the first to the last cell, in the cursor's dimension. This path includes the
   cursor.
+
+### Writing tabular data
+
+- Move to the top left cell of the table.
+- sync
+- dim row
+- v1, v2, v3
+- first
+- swap
+- dim col
