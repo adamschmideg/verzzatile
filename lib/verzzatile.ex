@@ -194,8 +194,7 @@ defmodule Verzzatile do
     end
 
     def go_home(state) do
-      put_in(state, [:cursors, state.cursor_name], state.origin)
-        |> change_dimension(:home)
+      put_in(state, [:cursors, state.cursor_name], %Cursor{id: state.origin.id, dimension: :home})
     end
 
     def jump(state, cursor_name) do

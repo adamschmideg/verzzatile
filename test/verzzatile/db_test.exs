@@ -14,7 +14,7 @@ defmodule Verzzatile.DbTest do
     :move_prev => nil,
     :move_first => nil,
     :move_last => nil,
-    #:go_home => nil,
+    :go_home => nil,
     :jump => @cursors,
     :connect_cursor => @cursors,
     :add_and_move => ["Fred", "Wilma", "Barney", "Betty"],
