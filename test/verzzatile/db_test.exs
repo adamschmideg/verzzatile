@@ -29,20 +29,46 @@ defmodule Verzzatile.DbTest do
     |> StreamData.map(fn f -> if args = @operations[f], do: {f, Enum.random(args)}, else: {f, nil} end)
   end
 
+  def apply_operations(operations, state \\ nil) do
+    initial_state = state || State.new()
+    Enum.reduce(operations, initial_state, fn {op, args}, acc_state ->
+      if args == nil do
+        apply(Db, op, [acc_state])
+      else
+        apply(Db, op, [acc_state, args])
+      end
+    end)
+  end
 
   property "apply operations sequence without exceptions" do
     check all operations <- list_of(operation_gen(), min_length: 1, max_length: 10) do
-      state = State.new()
-      Enum.reduce(operations, state, fn {op, args}, acc_state ->
-        if args == nil do
-          apply(Db, op, [acc_state])
-        else
-          apply(Db, op, [acc_state, args])
-        end
-      end)
+      apply_operations(operations)
 
       assert true
     end
+  end
+
+  property "Adding a cell creates at least two consecutive cells" do
+    check all operations <- list_of(operation_gen(), min_length: 1, max_length: 10) do
+      state = apply_operations(operations)
+        |> Db.change_dimension(:brave_new_world)
+        |> Db.add_and_move("America")
+      new_cursor = Db.show_cursor(state)
+      prev_cursor = state |> Db.move_prev() |> Db.show_cursor()
+      assert new_cursor != prev_cursor
+      assert new_cursor == state |> Db.move_prev() |> Db.move_next() |> Db.show_cursor()
+    end
+  end
+
+  test "Add cell creates a new cell than is prev neighbor" do
+    state = State.new()
+            |> Db.cursor(:travel)
+            |> Db.change_dimension(:brave_new_world)
+            |> Db.add_and_move("America")
+    new_cursor = Db.show_cursor(state)
+    prev_cursor = state |> Db.move_prev() |> Db.show_cursor()
+    assert new_cursor != prev_cursor
+    assert new_cursor == state |> Db.move_prev() |> Db.move_next() |> Db.show_cursor()
   end
 
   test "FullCell fetches a key" do

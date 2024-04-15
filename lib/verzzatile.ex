@@ -151,46 +151,47 @@ defmodule Verzzatile do
     end
 
     def change_dimension(state, dimension) do
-      updated_state = ensure_dimension(state, dimension)
-      put_in(updated_state, [:cursors, 0, :dimension], dimension)
+      state
+        |> ensure_dimension(dimension)
+        |> put_in([:cursors, state.cursor_name, :dimension], dimension)
     end
 
     def move_next(state) do
-      cursor = state.cursors[0]
+      cursor = current_cursor(state)
       next_id = get_in(state, [:next, cursor.id, cursor.dimension])
       if next_id do
-        put_in(state, [:cursors, 0, :id], next_id)
+        put_in(state, [:cursors, state.cursor_name, :id], next_id)
       else
         add_error(state, {:no_next_cell, cursor})
       end
     end
 
     def move_prev(state) do
-      cursor = state.cursors[0]
+      cursor = current_cursor(state)
       prev_id = get_in(state, [:prev, cursor.id, cursor.dimension])
       if prev_id do
-        put_in(state, [:cursors, 0, :id], prev_id)
+        put_in(state, [:cursors, state.cursor_name, :id], prev_id)
       else
         add_error(state, {:no_prev_cell, cursor})
       end
     end
 
     def move_first(state) do
-      cursor = state.cursors[0]
+      cursor = current_cursor(state)
       head_id = get_in(state, [:head, cursor.id, cursor.dimension])
       if head_id do
-        put_in(state, [:cursors, 0, :id], head_id)
+        put_in(state, [:cursors, state.cursor_name, :id], head_id)
       else
         add_error(state, {:no_head_cell, cursor})
       end
     end
 
     def move_last(state) do
-      cursor = state.cursors[0]
+      cursor = current_cursor(state)
       cell = state.cells[cursor.id]
       path = path_ids(state, cell, cursor.dimension)
       last_id = Enum.at(path, -1)
-      put_in(state, [:cursors, 0, :id], last_id)
+      put_in(state, [:cursors, state.cursor_name, :id], last_id)
     end
 
     def go_home(state) do
@@ -198,7 +199,7 @@ defmodule Verzzatile do
     end
 
     def jump(state, cursor_name) do
-      cursor = state.cursors[cursor_name]
+      cursor = current_cursor(state)
       if cursor do
         put_in(state, [:cursors, state.cursor_name], cursor)
       else
