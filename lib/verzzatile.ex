@@ -94,6 +94,22 @@ defmodule Verzzatile do
     end
   end
 
+  defmodule Direction do
+    defstruct left: nil, right: nil, up: nil, down: nil
+  end
+
+  def extract_sublist(list, element, left_count, right_count) when left_count > 0 and right_count > 0 do
+    position = Enum.find_index(list, &(&1 == element))
+    left_index = max(position - left_count, 0)
+    left_count = min(position, left_count)
+    left_side = Enum.slice(list, left_index, left_count)
+    right_index = min(position + 1, length(list))
+    right_count = min(right_count, length(list) - right_index)
+    right_side = Enum.slice(list, right_index, right_count)
+
+    left_side ++ [element] ++ right_side
+  end
+
   defmodule Db do
     defp ensure_dimension(state, dimension) do
       if Map.has_key?(state.dimensions, dimension) do
@@ -253,6 +269,8 @@ defmodule Verzzatile do
       cell = state.cells[cursor.id]
       {cursor.dimension, cell.value}
     end
+
+    # def show_connected_cells(state, cell, x_dimension, y_dimension, view_window = %Direction{}) do
 
     defp path_ids(state, cell = %Cell{}, dimension) do
       get_path_ids(state, cell.id, dimension, [cell.id])
