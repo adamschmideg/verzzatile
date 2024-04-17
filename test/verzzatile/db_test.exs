@@ -15,7 +15,6 @@ defmodule Verzzatile.DbTest do
     :move_first => nil,
     :move_last => nil,
     :go_home => nil,
-    :jump => @cursors,
     :connect_cursor => @cursors,
     :add_and_move => ["Fred", "Wilma", "Barney", "Betty"],
     :change_dimension => [:east, :west, :north, :south]
@@ -133,15 +132,6 @@ defmodule Verzzatile.DbTest do
             |> Db.cursor(0)
             |> Db.connect_cursor(1)
     assert ["Abroad", :origin] = Db.full_path_values(state)
-  end
-
-  test "Jumping with cursor" do
-    state = State.new()
-            |> Db.add_and_move("Abroad")
-            |> Db.change_dimension(:travel)
-            |> Db.cursor(1)
-            |> Db.jump(0)
-    assert {:travel, "Abroad"} = Db.show_cursor(state)
   end
 
   @tag :skip

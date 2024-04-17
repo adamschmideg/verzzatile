@@ -207,15 +207,6 @@ defmodule Verzzatile do
       put_in(state, [:cursors, state.cursor_name], %Cursor{id: state.origin.id, dimension: :home})
     end
 
-    def jump(state, cursor_name) do
-      cursor = current_cursor(state)
-      if cursor do
-        put_in(state, [:cursors, state.cursor_name], cursor)
-      else
-        add_error(state, {:no_cursor, cursor_name})
-      end
-    end
-
     def connect_cursor(state, other_cursor_name) do
       other_cursor = state.cursors[other_cursor_name]
       if other_cursor do
