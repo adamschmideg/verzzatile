@@ -6,8 +6,9 @@ defmodule Verzzatile do
   defmodule Cell do
     defstruct id: nil, value: nil
 
-    def new(value) do
-      %Cell{id: :rand.uniform(1000_000_000), value: value}
+    def new(value, id \\ nil) do
+      id = id || :rand.uniform(1000_000_000)
+      %Cell{id: id, value: value}
     end
   end
 
@@ -61,7 +62,7 @@ defmodule Verzzatile do
     defstruct cells: %{}, next: %{}, prev: %{}, head: %{}, errors: [], dimensions: %{}, cursors: %{}, origin: nil, cursor_name: nil
 
     def new do
-      origin = Cell.new(:origin)
+      origin = Cell.new(:origin, 0)
       cursor = %Cursor{id: origin.id, dimension: :home}
       cursor_name = 0
       %State{cells: %{origin.id => origin},
@@ -115,6 +116,14 @@ defmodule Verzzatile do
       put_in(state, [:errors], error)
     end
 
+    def clear_errors(state) do
+      put_in(state, [:errors], [])
+    end
+
+    def show_errors(state) do
+      state.errors
+    end
+
     defp connect(state, from, to, dimension) do
       next = get_in(state, [:next, from.id, dimension])
       prev = get_in(state, [:prev, to.id, dimension])
@@ -122,8 +131,8 @@ defmodule Verzzatile do
         next != nil -> add_error(state, {:already_connected, from, next})
         prev != nil -> add_error(state, {:already_connected, prev, to})
         true ->
-          new_next_ids = state.next[from.id] || %{} |> Map.put(dimension, to.id)
-          new_prev_ids = state.prev[to.id] || %{} |> Map.put(dimension, from.id)
+          new_next_ids = Map.put(state.next[from.id] || %{}, dimension, to.id)
+          new_prev_ids = Map.put(state.prev[to.id] || %{},dimension, from.id)
           updated_state = state
                           |> put_in([:next, from.id], new_next_ids)
                           |> put_in([:prev, to.id], new_prev_ids)
@@ -221,7 +230,7 @@ defmodule Verzzatile do
 
     def add_and_move(state, value) do
       cursor = current_cursor(state)
-      cell = Cell.new(value)
+      cell = Cell.new(value, map_size(state.cells))
       from = state.cells[cursor.id]
       state
         |> put_in([:cells, cell.id], cell)

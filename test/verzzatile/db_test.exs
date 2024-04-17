@@ -42,8 +42,9 @@ defmodule Verzzatile.DbTest do
 
   property "apply operations sequence without exceptions" do
     check all operations <- list_of(operation_gen(), min_length: 1, max_length: 10) do
-      apply_operations(operations)
+      state = apply_operations(operations)
 
+      assert map_size(state.next) == map_size(state.prev)
       assert true
     end
   end
@@ -51,8 +52,10 @@ defmodule Verzzatile.DbTest do
   property "Adding a cell creates at least two consecutive cells" do
     check all operations <- list_of(operation_gen(), min_length: 1, max_length: 10) do
       state = apply_operations(operations)
+        |> Db.clear_errors()
         |> Db.change_dimension(:brave_new_world)
         |> Db.add_and_move("America")
+      assert Db.show_errors(state) == []
       new_cursor = Db.show_cursor(state)
       prev_cursor = state |> Db.move_prev() |> Db.show_cursor()
       assert new_cursor != prev_cursor
@@ -62,9 +65,12 @@ defmodule Verzzatile.DbTest do
 
   test "Add cell creates a new cell than is prev neighbor" do
     state = State.new()
+            |> Db.add_and_move("Italy")
+            |> Db.go_home()
             |> Db.cursor(:travel)
             |> Db.change_dimension(:brave_new_world)
             |> Db.add_and_move("America")
+    assert [] = Db.show_errors(state)
     new_cursor = Db.show_cursor(state)
     prev_cursor = state |> Db.move_prev() |> Db.show_cursor()
     assert new_cursor != prev_cursor
