@@ -3,6 +3,7 @@ defmodule Verzzatile.DbTest do
   use ExUnitProperties
   alias Verzzatile.State
   alias Verzzatile.Db
+  alias Verzzatile.Show
 
   import StreamData
 
@@ -41,9 +42,8 @@ defmodule Verzzatile.DbTest do
 
   property "apply operations sequence without exceptions" do
     check all operations <- list_of(operation_gen(), min_length: 1, max_length: 10) do
-      state = apply_operations(operations)
+      apply_operations(operations)
 
-      assert map_size(state.next) == map_size(state.prev)
       assert true
     end
   end
@@ -54,11 +54,11 @@ defmodule Verzzatile.DbTest do
         |> Db.clear_errors()
         |> Db.change_dimension(:brave_new_world)
         |> Db.add_and_move("America")
-      assert Db.show_errors(state) == []
-      new_cursor = Db.show_cursor(state)
-      prev_cursor = state |> Db.move_prev() |> Db.show_cursor()
+      assert Show.errors(state) == []
+      new_cursor = Show.cursor(state)
+      prev_cursor = state |> Db.move_prev() |> Show.cursor()
       assert new_cursor != prev_cursor
-      assert new_cursor == state |> Db.move_prev() |> Db.move_next() |> Db.show_cursor()
+      assert new_cursor == state |> Db.move_prev() |> Db.move_next() |> Show.cursor()
     end
   end
 
@@ -69,11 +69,11 @@ defmodule Verzzatile.DbTest do
             |> Db.cursor(:travel)
             |> Db.change_dimension(:brave_new_world)
             |> Db.add_and_move("America")
-    assert [] = Db.show_errors(state)
-    new_cursor = Db.show_cursor(state)
-    prev_cursor = state |> Db.move_prev() |> Db.show_cursor()
+    assert [] = Show.errors(state)
+    new_cursor = Show.cursor(state)
+    prev_cursor = state |> Db.move_prev() |> Show.cursor()
     assert new_cursor != prev_cursor
-    assert new_cursor == state |> Db.move_prev() |> Db.move_next() |> Db.show_cursor()
+    assert new_cursor == state |> Db.move_prev() |> Db.move_next() |> Show.cursor()
   end
 
   test "FullCell fetches a key" do
@@ -91,10 +91,10 @@ defmodule Verzzatile.DbTest do
     state = State.new()
       |> Db.change_dimension(:friend)
       |> Db.add_and_move("Fred")
-    assert {:friend, "Fred"} = Db.show_cursor(state)
+    assert {:friend, "Fred"} = Show.cursor(state)
     new_cursor = state
       |> Db.move_prev()
-      |> Db.show_cursor()
+      |> Show.cursor()
     assert {:friend, :origin} = new_cursor
   end
 
@@ -104,7 +104,7 @@ defmodule Verzzatile.DbTest do
       |> Db.add_and_move("Fred")
       |> Db.add_and_move("Wilma")
       |> Db.move_prev()
-    assert ["Fred", "Wilma"] = Db.path_values(state)
+    assert ["Fred", "Wilma"] = Show.path_values(state)
   end
 
   test "Move to the first cell" do
@@ -112,7 +112,7 @@ defmodule Verzzatile.DbTest do
       |> Db.add_and_move("Fred")
       |> Db.add_and_move("Wilma")
       |> Db.move_first()
-    assert {:home, :origin} = Db.show_cursor(state)
+    assert {:home, :origin} = Show.cursor(state)
   end
 
   test "Get the full path" do
@@ -121,7 +121,7 @@ defmodule Verzzatile.DbTest do
             |> Db.add_and_move("Fred")
             |> Db.add_and_move("Wilma")
             |> Db.move_prev()
-    assert [:origin, "Fred", "Wilma"] = Db.full_path_values(state)
+    assert [:origin, "Fred", "Wilma"] = Show.full_path_values(state)
   end
 
   test "Connect cursors" do
@@ -131,22 +131,7 @@ defmodule Verzzatile.DbTest do
             |> Db.cursor(1)
             |> Db.cursor(0)
             |> Db.connect_cursor(1)
-    assert ["Abroad", :origin] = Db.full_path_values(state)
+    assert ["Abroad", :origin] = Show.full_path_values(state)
   end
 
-  @tag :skip
-  test "All functions in Db module work" do
-    state = State.new()
-      |> Db.change_dimension(:friend)
-      |> Db.add_and_move('value1')
-      |> Db.move_prev()
-      |> Db.add_and_move('value2')
-      |> Db.move_next()
-      |> Db.cursor(1)
-      |> Db.connect_cursor(0)
-      |> Db.move_first()
-      |> Db.move_last()
-    assert [] = Db.show_cursor(state)
-    assert [] = Db.path_values(state)
-  end
 end

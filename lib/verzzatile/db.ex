@@ -1,8 +1,7 @@
 defmodule Verzzatile.Db do
   alias Verzzatile.Cell
   alias Verzzatile.Cursor
-  alias Verzzatile.Direction
-  import Verzzatile.Show, only: [extract_and_pad: 4]
+  alias Verzzatile.State
 
   defp ensure_dimension(state, dimension) do
     if Map.has_key?(state.dimensions, dimension) do
@@ -27,10 +26,6 @@ defmodule Verzzatile.Db do
 
   def clear_errors(state) do
     put_in(state, [:errors], [])
-  end
-
-  def show_errors(state) do
-    state.errors
   end
 
   defp connect(state, from, to, dimension) do
@@ -138,44 +133,15 @@ defmodule Verzzatile.Db do
     |> move_next
   end
 
-  def path_values(state) do
-    cursor = current_cursor(state)
-    cell = state.cells[cursor.id]
-    path_ids(state, cell, cursor.dimension)
-    |> Enum.map(fn id -> state.cells[id].value end)
-  end
-
-  def full_path_values(state) do
-    cursor = current_cursor(state)
-    head_id = get_in(state, [:head, cursor.id, cursor.dimension])
-    head = state.cells[head_id]
-    path_ids(state, head, cursor.dimension)
-    |> Enum.map(fn id -> state.cells[id].value end)
-  end
-
-  defp current_cursor(state) do
+  def current_cursor(state) do
     state.cursors[state.cursor_name]
   end
 
-  def show_cursor(state) do
-    cursor = current_cursor(state)
-    cell = state.cells[cursor.id]
-    {cursor.dimension, cell.value}
-  end
-
-  def show_connected_cells(state, cell, x_dimension, y_dimension, view_window = %Direction{}) do
-    head_id = get_in(state, [:head, cell.id, x_dimension])
-    head = state.cells[head_id]
-    main_ids = path_ids(state, head, x_dimension)
-    main_ids = extract_and_pad(main_ids, cell.id, view_window.left, view_window.right)
-    {main_ids, y_dimension}
-  end
-
-  defp path_ids(state, cell = %Cell{}, dimension) do
+  def path_ids(state = %State{}, cell = %Cell{}, dimension) do
     get_path_ids(state, cell.id, dimension, [cell.id])
   end
 
-  defp get_path_ids(state, id, dimension, acc) do
+  defp get_path_ids(state = %State{}, id, dimension, acc) do
     next_id = get_in(state, [:next, id, dimension])
     case next_id do
       nil -> Enum.reverse(acc)
