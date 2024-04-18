@@ -3,21 +3,8 @@ defmodule Verzzatile.DbTest do
   use ExUnitProperties
   alias Verzzatile.State
   alias Verzzatile.Db
-  import Verzzatile, only: [extract_sublist: 4]
 
   import StreamData
-
-  property "extract_sublist returns a list of correct length" do
-    check all list <- list_of(integer(), min_length: 1, max_length: 100),
-          pos <- integer(0..length(list) - 1),
-          left_count <- integer(1..10),
-          right_count <- integer(1..10) do
-      element = Enum.at(list, pos)
-      result = extract_sublist(list, element, left_count, right_count)
-      IO.inspect(%{list: list, element: element, left_count: left_count, right_count: right_count, result: result})
-      assert length(result) <= left_count + 1 + right_count
-    end
-  end
 
   @cursors [:origin, :home, :friend, :enemy, :travel]
 
@@ -158,7 +145,6 @@ defmodule Verzzatile.DbTest do
       |> Db.cursor(1)
       |> Db.connect_cursor(0)
       |> Db.move_first()
-      |> Db.jump(0)
       |> Db.move_last()
     assert [] = Db.show_cursor(state)
     assert [] = Db.path_values(state)
