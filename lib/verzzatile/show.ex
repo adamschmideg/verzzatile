@@ -1,9 +1,7 @@
 defmodule Verzzatile.Show do
-  alias Verzzatile.Db
+  alias Verzzatile.Cell
   alias Verzzatile.Direction
   alias Verzzatile.State
-
-  import Verzzatile.Db, only: [current_cursor: 1, path_ids: 3]
 
   def extract_and_pad(list, element, left_count, right_count) when left_count > 0 and right_count > 0 do
     position = Enum.find_index(list, &(&1 == element))
@@ -24,7 +22,7 @@ defmodule Verzzatile.Show do
   def show_connected_cells(state = %State{}, cell, x_dimension, y_dimension, view_window = %Direction{}) do
     head_id = get_in(state, [:head, cell.id, x_dimension])
     head = state.cells[head_id]
-    main_ids = Db.path_ids(state, head, x_dimension)
+    main_ids = path_ids(state, head, x_dimension)
     main_ids = extract_and_pad(main_ids, cell.id, view_window.left, view_window.right)
     {main_ids, y_dimension}
   end
@@ -50,4 +48,19 @@ defmodule Verzzatile.Show do
     |> Enum.map(fn id -> state.cells[id].value end)
   end
 
+  def current_cursor(state) do
+    state.cursors[state.cursor_name]
+  end
+
+  def path_ids(state = %State{}, cell = %Cell{}, dimension) do
+    get_path_ids(state, cell.id, dimension, [cell.id])
+  end
+
+  defp get_path_ids(state = %State{}, id, dimension, acc) do
+    next_id = get_in(state, [:next, id, dimension])
+    case next_id do
+      nil -> Enum.reverse(acc)
+      _ -> get_path_ids(state, next_id, dimension, [next_id | acc])
+    end
+  end
 end

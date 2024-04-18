@@ -3,7 +3,9 @@ defmodule Verzzatile.Db do
   alias Verzzatile.Cursor
   alias Verzzatile.State
 
-  defp ensure_dimension(state, dimension) do
+  import Verzzatile.Show, only: [current_cursor: 1, path_ids: 3]
+
+  defp ensure_dimension(state = %State{}, dimension) do
     if Map.has_key?(state.dimensions, dimension) do
       state
     else
@@ -11,7 +13,7 @@ defmodule Verzzatile.Db do
     end
   end
 
-  def cursor(state, cursor_name) do
+  def cursor(state = %State{}, cursor_name) do
     state = %{state | cursor_name: cursor_name}
     if Map.has_key?(state.cursors, cursor_name) do
       state
@@ -20,15 +22,15 @@ defmodule Verzzatile.Db do
     end
   end
 
-  defp add_error(state, error) do
+  defp add_error(state = %State{}, error) do
     put_in(state, [:errors], error)
   end
 
-  def clear_errors(state) do
+  def clear_errors(state = %State{}) do
     put_in(state, [:errors], [])
   end
 
-  defp connect(state, from, to, dimension) do
+  defp connect(state = %State{}, from, to, dimension) do
     next = get_in(state, [:next, from.id, dimension])
     prev = get_in(state, [:prev, to.id, dimension])
     cond do
@@ -46,7 +48,7 @@ defmodule Verzzatile.Db do
     end
   end
 
-  defp change_head_ids(state, path, head_id, dimension) do
+  defp change_head_ids(state = %State{}, path, head_id, dimension) do
     Enum.reduce(path, state, fn id, acc_state ->
       dimension_path = [:head, id, dimension]
       id_path = [:head, id]
@@ -63,13 +65,13 @@ defmodule Verzzatile.Db do
     end)
   end
 
-  def change_dimension(state, dimension) do
+  def change_dimension(state = %State{}, dimension) do
     state
     |> ensure_dimension(dimension)
     |> put_in([:cursors, state.cursor_name, :dimension], dimension)
   end
 
-  def move_next(state) do
+  def move_next(state = %State{}) do
     cursor = current_cursor(state)
     next_id = get_in(state, [:next, cursor.id, cursor.dimension])
     if next_id do
@@ -79,7 +81,7 @@ defmodule Verzzatile.Db do
     end
   end
 
-  def move_prev(state) do
+  def move_prev(state = %State{}) do
     cursor = current_cursor(state)
     prev_id = get_in(state, [:prev, cursor.id, cursor.dimension])
     if prev_id do
@@ -89,7 +91,7 @@ defmodule Verzzatile.Db do
     end
   end
 
-  def move_first(state) do
+  def move_first(state = %State{}) do
     cursor = current_cursor(state)
     head_id = get_in(state, [:head, cursor.id, cursor.dimension])
     if head_id do
@@ -99,7 +101,7 @@ defmodule Verzzatile.Db do
     end
   end
 
-  def move_last(state) do
+  def move_last(state = %State{}) do
     cursor = current_cursor(state)
     cell = state.cells[cursor.id]
     path = path_ids(state, cell, cursor.dimension)
@@ -107,11 +109,11 @@ defmodule Verzzatile.Db do
     put_in(state, [:cursors, state.cursor_name, :id], last_id)
   end
 
-  def go_home(state) do
+  def go_home(state = %State{}) do
     put_in(state, [:cursors, state.cursor_name], %Cursor{id: state.origin.id, dimension: :home})
   end
 
-  def connect_cursor(state, other_cursor_name) do
+  def connect_cursor(state = %State{}, other_cursor_name) do
     other_cursor = state.cursors[other_cursor_name]
     if other_cursor do
       cursor = current_cursor(state)
@@ -123,7 +125,7 @@ defmodule Verzzatile.Db do
     end
   end
 
-  def add_and_move(state, value) do
+  def add_and_move(state = %State{}, value) do
     cursor = current_cursor(state)
     cell = Cell.new(value, map_size(state.cells))
     from = state.cells[cursor.id]
@@ -133,20 +135,5 @@ defmodule Verzzatile.Db do
     |> move_next
   end
 
-  def current_cursor(state) do
-    state.cursors[state.cursor_name]
-  end
-
-  def path_ids(state = %State{}, cell = %Cell{}, dimension) do
-    get_path_ids(state, cell.id, dimension, [cell.id])
-  end
-
-  defp get_path_ids(state = %State{}, id, dimension, acc) do
-    next_id = get_in(state, [:next, id, dimension])
-    case next_id do
-      nil -> Enum.reverse(acc)
-      _ -> get_path_ids(state, next_id, dimension, [next_id | acc])
-    end
-  end
 
 end
