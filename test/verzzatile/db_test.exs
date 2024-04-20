@@ -7,39 +7,8 @@ defmodule Verzzatile.DbTest do
   alias Verzzatile.Show
 
   import StreamData
+  import TestHelper
 
-  @cursors [:origin, :home, :friend, :enemy, :travel]
-
-  @operations %{
-    :cursor => @cursors,
-    :move_next => nil,
-    :move_prev => nil,
-    :move_first => nil,
-    :move_last => nil,
-    :go_home => nil,
-    :connect_cursor => @cursors,
-    :add_and_move => ["Fred", "Wilma", "Barney", "Betty"],
-    :change_dimension => [:east, :west, :north, :south]
-  }
-
-  def operation_gen() do
-    @operations
-    |> Map.keys()
-    |> Enum.map(&constant(&1))
-    |> one_of()
-    |> StreamData.map(fn f -> if args = @operations[f], do: {f, Enum.random(args)}, else: {f, nil} end)
-  end
-
-  def apply_operations(operations, state \\ nil) do
-    initial_state = state || State.new()
-    Enum.reduce(operations, initial_state, fn {op, args}, acc_state ->
-      if args == nil do
-        apply(Db, op, [acc_state])
-      else
-        apply(Db, op, [acc_state, args])
-      end
-    end)
-  end
 
   property "apply operations sequence without exceptions" do
     check all operations <- list_of(operation_gen(), min_length: 1, max_length: 10) do
@@ -136,8 +105,19 @@ defmodule Verzzatile.DbTest do
   end
 
   @tag :focus
+  test "Tmp for head" do
+    ops = [add_and_move: "Betty", move_first: nil, change_dimension: :north, add_and_move: "Barney"]
+    state = apply_operations(ops)
+    Enum.each(state.next, fn {from_id, dim_to_id} ->
+      Enum.each(dim_to_id, fn {dim, _to_id} ->
+        assert get_in(state, [:head, from_id, dim])
+      end)
+    end)
+  end
+
   property "Show connected cells" do
-    # Problem: [add_and_move: "Betty", move_first: nil, change_dimension: :north, add_and_move: "Barney"]
+    # Problem with head: [add_and_move: "Betty", move_first: nil, change_dimension: :north, add_and_move: "Barney"]
+    # Problem with head: [cursor: :enemy, connect_cursor: :enemy, change_dimension: :north, add_and_move: "Betty"]
     check all operations <- list_of(operation_gen(), min_length: 1, max_length: 10) do
       state = apply_operations(operations)
       Enum.each(state.next, fn {from_id, dim_to_id} ->

@@ -23,6 +23,15 @@ defmodule Verzzatile.Show do
     state.errors
   end
 
+  defp head_id(_state = %State{}, id, nil, _dimension), do: id
+  defp head_id(state = %State{}, _id, prev_id, dimension) do
+    head_id(state, prev_id, get_in(state, [:prev, prev_id, dimension]), dimension)
+  end
+  def head_id(state = %State{}, id, dimension) do
+    head_id(state, id, get_in(state, [:prev, id, dimension]), dimension)
+  end
+
+
   def show_connected_cells(state = %State{}, cell, x_dimension, y_dimension, view_window = %Direction{}) do
     head_id = get_in(state, [:head, cell.id, x_dimension])
     head = state.cells[head_id] || cell

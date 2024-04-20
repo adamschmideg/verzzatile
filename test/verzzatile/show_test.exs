@@ -17,4 +17,12 @@ defmodule Verzzatile.ShowTest do
     end
   end
 
+  property "Head ID is the first cell in the path" do
+    check all state <- map_of(:integer, :map, min_size: 1) do
+      start_id = Map.keys(state) |> List.first()
+      dimension = Map.values(state) |> List.first() |> Map.keys() |> List.first()
+      head_id = head_id(state, start_id, dimension)
+      assert head_id == start_id, "head_id is not the first cell in the path"
+    end
+  end
 end
