@@ -3,6 +3,7 @@ defmodule Verzzatile.DbTest do
   use ExUnitProperties
   alias Verzzatile.State
   alias Verzzatile.Db
+  alias Verzzatile.Direction
   alias Verzzatile.Show
 
   import StreamData
@@ -132,6 +133,30 @@ defmodule Verzzatile.DbTest do
             |> Db.cursor(0)
             |> Db.connect_cursor(1)
     assert ["Abroad", :origin] = Show.full_path_values(state)
+  end
+
+  @tag :focus
+  property "Show connected cells" do
+    # Problem: [add_and_move: "Betty", move_first: nil, change_dimension: :north, add_and_move: "Barney"]
+    check all operations <- list_of(operation_gen(), min_length: 1, max_length: 10) do
+      state = apply_operations(operations)
+      Enum.each(state.next, fn {from_id, dim_to_id} ->
+        Enum.each(dim_to_id, fn {dim, _to_id} ->
+          assert get_in(state, [:head, from_id, dim])
+        end)
+      end)
+
+      matrix = state
+        |> Db.change_dimension(:east)
+        |> Db.add_and_move("Italy")
+        |> Db.go_home()
+        |> Db.change_dimension(:north)
+        |> Db.add_and_move("America")
+        |> Db.change_dimension(:east)
+        |> Show.show_connected_cells(state.origin, :east, :north, %Direction{left: 3, right: 3, up: 3, down: 3})
+
+      assert Enum.at(Enum.at(matrix, 3), 3) == state.origin.id
+    end
   end
 
 end
