@@ -44,6 +44,7 @@ defmodule Verzzatile.Db do
                         |> put_in([:prev, to.id], new_prev_ids)
         head_id = get_in(state, [:head, from.id, dimension]) || from.id
         path = [from.id | path_ids(state, to, dimension)]
+        IO.inspect(%{path: path, head_id: head_id, dimension: dimension}, label: "Connect")
         change_head_ids(updated_state, path, head_id, dimension)
     end
   end
@@ -135,5 +136,14 @@ defmodule Verzzatile.Db do
     |> move_next
   end
 
+  def put_in_always(map, keys, value) do
+    [k | ks] = keys
+    current = get_in(map, [k])
+    cond do
+      ks == [] -> put_in(map, [k], value)
+      current == nil -> put_in(map, [k], put_in_always(%{}, ks, value))
+      true -> put_in(map, [k], put_in_always(current, ks, value))
+    end
+  end
 
 end

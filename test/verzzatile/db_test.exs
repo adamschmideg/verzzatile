@@ -105,6 +105,12 @@ defmodule Verzzatile.DbTest do
   end
 
   @tag :focus
+  test "Nested structure ensuring non-existent substructure" do
+    map = %{}
+    keys = [:a, :b, :c]
+    assert %{:a => %{:b => %{:c => 0}}} == Db.put_in_always(map, keys, 0)
+  end
+
   test "Tmp for head" do
     ops = [add_and_move: "Betty", move_first: nil, change_dimension: :north, add_and_move: "Barney"]
     state = apply_operations(ops)
