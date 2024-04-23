@@ -44,25 +44,13 @@ defmodule Verzzatile.Db do
                         |> put_in([:prev, to.id], new_prev_ids)
         head_id = get_in(state, [:head, from.id, dimension]) || from.id
         path = [from.id | path_ids(state, to, dimension)]
-        IO.inspect(%{path: path, head_id: head_id, dimension: dimension}, label: "Connect")
         change_head_ids(updated_state, path, head_id, dimension)
     end
   end
 
   defp change_head_ids(state = %State{}, path, head_id, dimension) do
     Enum.reduce(path, state, fn id, acc_state ->
-      dimension_path = [:head, id, dimension]
-      id_path = [:head, id]
-
-      # Check if the dimension exists for the id
-      case get_in(acc_state, dimension_path) do
-        nil ->
-          # Dimension doesn't exist; create a new map for the id with dimension => head_id
-          put_in(acc_state, id_path, %{dimension => head_id})
-        _ ->
-          # Dimension exists; update it with head_id
-          put_in(acc_state, dimension_path, head_id)
-      end
+      put_in_always(acc_state, [:head, id, dimension], head_id)
     end)
   end
 

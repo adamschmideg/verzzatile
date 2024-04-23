@@ -105,20 +105,29 @@ defmodule Verzzatile.DbTest do
   end
 
   @tag :focus
-  test "Nested structure ensuring non-existent substructure" do
-    map = %{}
-    keys = [:a, :b, :c]
-    assert %{:a => %{:b => %{:c => 0}}} == Db.put_in_always(map, keys, 0)
-  end
-
   test "Tmp for head" do
-    ops = [add_and_move: "Betty", move_first: nil, change_dimension: :north, add_and_move: "Barney"]
+    ops = [
+      move_next: nil,
+      move_prev: nil,
+      cursor: :friend,
+      move_prev: nil,
+      move_first: nil,
+      connect_cursor: :friend,
+      connect_cursor: :enemy,
+      move_last: nil
+    ]
     state = apply_operations(ops)
     Enum.each(state.next, fn {from_id, dim_to_id} ->
       Enum.each(dim_to_id, fn {dim, _to_id} ->
         assert get_in(state, [:head, from_id, dim])
       end)
     end)
+  end
+
+  test "Nested structure ensuring non-existent substructure" do
+    map = %{}
+    keys = [:a, :b, :c]
+    assert %{:a => %{:b => %{:c => 0}}} == Db.put_in_always(map, keys, 0)
   end
 
   property "Show connected cells" do
