@@ -46,6 +46,19 @@ defmodule Verzzatile.Show do
              |> extract_and_pad(cell, view_window.up, view_window.down) end)
   end
 
+  def matrix_to_string(matrix, cell_width \\ 10) do
+    Enum.map(matrix, fn row ->
+      Enum.map(row, fn cell ->
+        case cell do
+          nil -> String.duplicate(" ", cell_width)
+          _ -> cell.value |> to_string |> String.pad_leading(cell_width)
+        end
+      end)
+      |> Enum.join(" ")
+    end)
+    |> Enum.join("\n")
+  end
+
   def cursor(state = %State{}) do
     cursor = current_cursor(state)
     cell = state.cells[cursor.id]

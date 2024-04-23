@@ -52,6 +52,7 @@ defmodule Verzzatile.ShowTest do
                |> Show.show_connected_cells(state.origin, :east, :north, %Direction{left: 3, right: 3, up: 3, down: 3})
 
       assert Enum.at(Enum.at(matrix, 3), 3) == state.origin
+      matrix |> Show.matrix_to_string() |> IO.puts()
     end
   end
 end
