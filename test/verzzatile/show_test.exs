@@ -51,7 +51,7 @@ defmodule Verzzatile.ShowTest do
                |> Db.change_dimension(:east)
                |> Show.show_connected_cells(state.origin, :east, :north, %Direction{left: 3, right: 3, up: 3, down: 3})
 
-      assert Enum.at(Enum.at(matrix, 3), 3) == state.origin.id
+      assert Enum.at(Enum.at(matrix, 3), 3) == state.origin
     end
   end
 end

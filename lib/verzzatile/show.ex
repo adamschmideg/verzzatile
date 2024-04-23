@@ -36,10 +36,14 @@ defmodule Verzzatile.Show do
     head_id = get_in(state, [:head, cell.id, x_dimension])
     head = state.cells[head_id] || cell
     state
-      |> path_ids(head, x_dimension)
-      |> extract_and_pad(cell.id, view_window.left, view_window.right)
-      |> Enum.map(fn id ->
-           path_ids(state, Cell.new(nil, id), y_dimension) |> extract_and_pad(id, view_window.up, view_window.down) end)
+      |> path(head, x_dimension)
+      |> extract_and_pad(cell, view_window.left, view_window.right)
+      |> Enum.map(fn cell ->
+           case cell do
+              nil -> []
+              _ -> path(state, cell, y_dimension)
+            end
+             |> extract_and_pad(cell, view_window.up, view_window.down) end)
   end
 
   def cursor(state = %State{}) do
@@ -78,6 +82,11 @@ defmodule Verzzatile.Show do
 
   def path_ids(state = %State{}, cell = %Cell{}, dimension) do
     get_path_ids(state, cell.id, dimension, [cell.id])
+  end
+
+  def path(state = %State{}, cell=%Cell{}, dimension) do
+    path_ids(state, cell, dimension)
+    |> Enum.map(fn id -> state.cells[id] end)
   end
 
   defp get_path_ids(state = %State{}, id, dimension, acc) do
