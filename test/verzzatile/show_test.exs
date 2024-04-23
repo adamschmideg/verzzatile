@@ -5,6 +5,8 @@ defmodule Verzzatile.ShowTest do
   import Verzzatile.Show
   import StreamData
 
+  import TestHelper
+
   property "extract_and_pad returns a list of correct length" do
     check all list <- list_of(integer(), min_length: 1, max_length: 100),
           pos <- integer(0..length(list) - 1),
@@ -18,7 +20,8 @@ defmodule Verzzatile.ShowTest do
   end
 
   property "Head ID is the first cell in the path" do
-    check all state <- map_of(:integer, :map, min_size: 1) do
+    check all operations <- list_of(operation_gen(), min_length: 1, max_length: 10) do
+      state = apply_operations(operations)
       start_id = Map.keys(state) |> List.first()
       dimension = Map.values(state) |> List.first() |> Map.keys() |> List.first()
       head_id = head_id(state, start_id, dimension)
