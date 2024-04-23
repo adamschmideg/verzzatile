@@ -35,7 +35,7 @@ defmodule Verzzatile.Show do
   def show_connected_cells(state = %State{}, cell, x_dimension, y_dimension, view_window = %Direction{}) do
     head_id = get_in(state, [:head, cell.id, x_dimension])
     head = state.cells[head_id] || cell
-    state
+    matrix = state
       |> path(head, x_dimension)
       |> extract_and_pad(cell, view_window.left, view_window.right)
       |> Enum.map(fn cell ->
@@ -44,6 +44,8 @@ defmodule Verzzatile.Show do
               _ -> path(state, cell, y_dimension)
             end
              |> extract_and_pad(cell, view_window.up, view_window.down) end)
+    matrix
+      |> update_in([Access.at(view_window.left), Access.at(view_window.up)], fn cell -> %{cell | value: "| #{cell.value} |"} end)
   end
 
   def matrix_to_string(matrix, cell_width \\ 10) do
