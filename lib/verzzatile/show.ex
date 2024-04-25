@@ -61,6 +61,13 @@ defmodule Verzzatile.Show do
     |> Enum.join("\n")
   end
 
+  def show(state = %State{}) do
+    cursor = current_cursor(state)
+    cell = state.cells[cursor.id]
+    show_connected_cells(state, cell, cursor.dimension, :home, %Direction{left: 3, right: 3, up: 3, down: 3})
+      |> matrix_to_string()
+  end
+
   def cursor(state = %State{}) do
     cursor = current_cursor(state)
     cell = state.cells[cursor.id]
