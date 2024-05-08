@@ -23,20 +23,18 @@ defmodule Console do
     def loop(state) do
       IO.puts("Enter a command:")
       case String.trim(IO.gets("> ")) |> String.split() do
+        [] -> loop(state)
         [command | args] ->
-          case String.to_atom(command) do
+          case command do
             "quit" -> IO.puts("Goodbye!")
             function_name when function_name in @possible_functions ->
-              new_state = apply(Functions, function_name, args)
+              new_state = apply(Functions, String.to_atom(function_name), [state | args])
               new_state |> Show.show() |> IO.puts()
               loop(new_state)
-            _ ->
-              IO.puts("Invalid function name. Use one of the following: #{@possible_functions}")
+            function_name ->
+              IO.puts("Invalid function name `#{function_name}`. Use one of the following: #{@possible_functions}")
               loop(state)
           end
-        _ ->
-          IO.puts("Invalid input. Try again.")
-          loop(state)
       end
     end
 
