@@ -31,6 +31,9 @@ defmodule Verzzatile.Show do
     head_id(state, id, get_in(state, [:prev, id, dimension]), dimension)
   end
 
+  def show_connected_cells(state = %State{}, cell, x_dimension, y_dimension) do
+    show_connected_cells(state, cell, x_dimension, y_dimension, %Direction{left: 3, right: 3, up: 3, down: 3})
+  end
 
   def show_connected_cells(state = %State{}, cell, x_dimension, y_dimension, view_window = %Direction{}) do
     head_id = get_in(state, [:head, cell.id, x_dimension])
@@ -64,7 +67,7 @@ defmodule Verzzatile.Show do
   def show(state = %State{}) do
     cursor = current_cursor(state)
     cell = state.cells[cursor.id]
-    show_connected_cells(state, cell, cursor.dimension, :home, %Direction{left: 3, right: 3, up: 3, down: 3})
+    show_connected_cells(state, cell, :planet, :moon, %Direction{left: 3, right: 3, up: 3, down: 3})
       |> matrix_to_string()
   end
 
