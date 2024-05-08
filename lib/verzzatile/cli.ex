@@ -1,4 +1,4 @@
-defmodule Console do
+defmodule Cli do
   alias Verzzatile.Db
 
   defmodule Functions do
@@ -26,7 +26,9 @@ defmodule Console do
         [] -> loop(state)
         [command | args] ->
           case command do
-            "quit" -> IO.puts("Goodbye!")
+            "quit" ->
+              IO.puts("Goodbye!")
+              System.halt(0)
             function_name when function_name in @possible_functions ->
               new_state = apply(Functions, String.to_atom(function_name), [state | args])
               new_state |> Show.show() |> IO.puts()
@@ -42,4 +44,4 @@ defmodule Console do
 end
 
 
-Console.App.start()
+Cli.App.start()
