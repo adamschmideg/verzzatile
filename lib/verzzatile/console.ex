@@ -17,12 +17,12 @@ defmodule Console do
 
     def start do
       state = Verzzatile.State.new()
+      IO.puts("Enter a command:")
       loop(state)
     end
 
     def loop(state) do
-      IO.puts("Enter a command:")
-      case String.trim(IO.gets("> ")) |> String.split() do
+      case IO.gets("> ") |> String.trim() |> String.split() do
         [] -> loop(state)
         [command | args] ->
           case command do
