@@ -17,13 +17,15 @@ defmodule Cli do
 
     def start do
       state = Verzzatile.State.new()
-      IO.puts("Enter a command:")
-      loop(state)
+      loop(state, "Enter a command")
     end
 
-    def loop(state) do
+    def loop(state, message) do
+      if message do
+        IO.puts(message)
+      end
       case IO.gets("> ") |> String.trim() |> String.split() do
-        [] -> loop(state)
+        [] -> loop(state, nil)
         [command | args] ->
           case command do
             "quit" ->
@@ -32,10 +34,9 @@ defmodule Cli do
             function_name when function_name in @possible_functions ->
               new_state = apply(Functions, String.to_atom(function_name), [state | args])
               new_state |> Show.show() |> IO.puts()
-              loop(new_state)
+              loop(new_state, nil)
             function_name ->
-              IO.puts("Invalid function name `#{function_name}`. Use one of the following: #{@possible_functions}")
-              loop(state)
+              loop(state, "Invalid function name `#{function_name}`. Use one of the following: #{@possible_functions}")
           end
       end
     end
