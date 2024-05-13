@@ -1,4 +1,4 @@
-defmodule Verzzatile.Show do
+defmodule Verzzatile.View do
   alias Verzzatile.Cell
   alias Verzzatile.Direction
   alias Verzzatile.State

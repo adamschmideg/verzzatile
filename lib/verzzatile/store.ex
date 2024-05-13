@@ -3,7 +3,7 @@ defmodule Verzzatile.Store do
   alias Verzzatile.Cursor
   alias Verzzatile.State
 
-  import Verzzatile.Show, only: [current_cursor: 1, path_ids: 3]
+  import Verzzatile.View, only: [current_cursor: 1, path_ids: 3]
 
   defp ensure_dimension(state = %State{}, dimension) do
     if Map.has_key?(state.dimensions, dimension) do

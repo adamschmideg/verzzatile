@@ -2,7 +2,7 @@ ExUnit.start()
 
 defmodule TestHelper do
   import StreamData
-  alias Verzzatile.{Db, State}
+  alias Verzzatile.{Store, State}
 
   @cursors [:origin, :home, :friend, :enemy, :travel]
 
@@ -30,9 +30,9 @@ defmodule TestHelper do
     initial_state = state || State.new()
     Enum.reduce(operations, initial_state, fn {op, args}, acc_state ->
       if args == nil do
-        apply(Db, op, [acc_state])
+        apply(Store, op, [acc_state])
       else
-        apply(Db, op, [acc_state, args])
+        apply(Store, op, [acc_state, args])
       end
     end)
   end

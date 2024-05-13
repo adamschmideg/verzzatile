@@ -43,16 +43,16 @@ defmodule Verzzatile.ViewTest do
       end)
 
       matrix = state
-               |> Db.change_dimension(:east)
-               |> Db.add_and_move("Italy")
-               |> Db.go_home()
-               |> Db.change_dimension(:north)
-               |> Db.add_and_move("America")
-               |> Db.change_dimension(:east)
-               |> Show.show_connected_cells(state.origin, :east, :north, %Direction{left: 3, right: 3, up: 3, down: 3})
+               |> Store.change_dimension(:east)
+               |> Store.add_and_move("Italy")
+               |> Store.go_home()
+               |> Store.change_dimension(:north)
+               |> Store.add_and_move("America")
+               |> Store.change_dimension(:east)
+               |> View.show_connected_cells(state.origin, :east, :north, %Direction{left: 3, right: 3, up: 3, down: 3})
 
       assert Enum.at(Enum.at(matrix, 3), 3).id == state.origin.id
-      matrix |> Show.matrix_to_string() |> IO.puts()
+      matrix |> View.matrix_to_string() |> IO.puts()
     end
   end
 end

@@ -1,5 +1,5 @@
 defmodule Cli do
-  alias Verzzatile.{Store, Show, State}
+  alias Verzzatile.{Store, View, State}
 
   defmodule Functions do
     def add(state, value) do
@@ -32,7 +32,7 @@ defmodule Cli do
   defmodule App do
     import Functions
 
-    alias Verzzatile.Show
+    alias Verzzatile.View
 
     @possible_functions Functions.__info__(:functions) |> Enum.map(&Atom.to_string(elem(&1,0)))
 
@@ -43,7 +43,7 @@ defmodule Cli do
 
     def loop(state, message, show_state) do
       if show_state do
-        state |> Show.show() |> IO.puts()
+        state |> View.show() |> IO.puts()
       end
       if message do
         IO.puts(message)
