@@ -1,4 +1,4 @@
-defmodule Verzzatile.Db do
+defmodule Verzzatile.Store do
   alias Verzzatile.Cell
   alias Verzzatile.Cursor
   alias Verzzatile.State

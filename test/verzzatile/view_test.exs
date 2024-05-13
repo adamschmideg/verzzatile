@@ -1,10 +1,10 @@
-defmodule Verzzatile.ShowTest do
+defmodule Verzzatile.ViewTest do
   use ExUnit.Case
   use ExUnitProperties
 
-  alias Verzzatile.{Db, Direction, Show}
+  alias Verzzatile.{Store, Direction, View}
 
-  import Verzzatile.Show
+  import Verzzatile.View
   import StreamData
 
   import TestHelper

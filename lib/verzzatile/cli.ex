@@ -1,29 +1,29 @@
 defmodule Cli do
-  alias Verzzatile.{Db, Show, State}
+  alias Verzzatile.{Store, Show, State}
 
   defmodule Functions do
     def add(state, value) do
-      Db.add_and_move(state, value)
+      Store.add_and_move(state, value)
     end
 
     def solar(_state) do
       state = State.new()
-        |> Db.change_dimension(:planet)
-        |> Db.add_and_move("Mercury")
-        |> Db.add_and_move("Venus")
-        |> Db.add_and_move("Earth")
-        |> Db.change_dimension(:moon)
-        |> Db.add_and_move("Luna")
-        |> Db.move_prev()
-        |> Db.change_dimension(:planet)
-        |> Db.add_and_move("Mars")
-        |> Db.change_dimension(:moon)
-        |> Db.add_and_move("Phobos")
-        |> Db.add_and_move("Deimos")
-        |> Db.move_first()
-        |> Db.change_dimension(:planet)
-        |> Db.add_and_move("Jupiter")
-      earth = state |> Db.move_first() |> Db.move_next() |> Db.move_next() |> Db.move_next()
+        |> Store.change_dimension(:planet)
+        |> Store.add_and_move("Mercury")
+        |> Store.add_and_move("Venus")
+        |> Store.add_and_move("Earth")
+        |> Store.change_dimension(:moon)
+        |> Store.add_and_move("Luna")
+        |> Store.move_prev()
+        |> Store.change_dimension(:planet)
+        |> Store.add_and_move("Mars")
+        |> Store.change_dimension(:moon)
+        |> Store.add_and_move("Phobos")
+        |> Store.add_and_move("Deimos")
+        |> Store.move_first()
+        |> Store.change_dimension(:planet)
+        |> Store.add_and_move("Jupiter")
+      earth = state |> Store.move_first() |> Store.move_next() |> Store.move_next() |> Store.move_next()
       earth
     end
 

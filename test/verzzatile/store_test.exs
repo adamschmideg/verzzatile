@@ -1,9 +1,9 @@
-defmodule Verzzatile.DbTest do
+defmodule Verzzatile.StoreTest do
   use ExUnit.Case
   use ExUnitProperties
   alias Verzzatile.State
-  alias Verzzatile.Db
-  alias Verzzatile.Show
+  alias Verzzatile.Store
+  alias Verzzatile.View
 
   import StreamData
   import TestHelper
